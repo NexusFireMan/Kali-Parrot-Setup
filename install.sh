@@ -171,8 +171,13 @@ OHMYZSH_BOOTSTRAP
 set_wallpaper() {
   local wallpaper="$1"
   local applied=0
+  local xfce_applied=0
+  local gnome_applied=0
+  local mate_applied=0
+  local kde_applied=0
   local uri="file://${wallpaper}"
   local xfce_desktop_xml="${HOME}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
+  local desktop_env="${XDG_CURRENT_DESKTOP:-}"
 
   if [[ ! -f "${wallpaper}" ]]; then
     log "No se encontró fondo en ${wallpaper}; se omite configuración de wallpaper."
@@ -182,28 +187,49 @@ set_wallpaper() {
   if command -v xfconf-query >/dev/null 2>&1; then
     backup_file "${xfce_desktop_xml}"
     mapfile -t xfce_props < <(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep -E '/last-image$' || true)
+    if [[ ${#xfce_props[@]} -eq 0 ]]; then
+      xfce_props=(
+        "/backdrop/screen0/monitor0/workspace0/last-image"
+        "/backdrop/screen0/monitorHDMI-0/workspace0/last-image"
+        "/backdrop/screen0/monitorVirtual-1/workspace0/last-image"
+      )
+    fi
     if [[ ${#xfce_props[@]} -gt 0 ]]; then
       for prop in "${xfce_props[@]}"; do
-        xfconf-query -c xfce4-desktop -p "${prop}" -s "${wallpaper}" >/dev/null 2>&1 || true
+        xfconf-query -c xfce4-desktop -p "${prop}" --create -t string -s "${wallpaper}" >/dev/null 2>&1 && xfce_applied=1 || true
       done
       mapfile -t xfce_style < <(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep -E '/image-style$' || true)
+      if [[ ${#xfce_style[@]} -eq 0 ]]; then
+        xfce_style=(
+          "/backdrop/screen0/monitor0/workspace0/image-style"
+          "/backdrop/screen0/monitorHDMI-0/workspace0/image-style"
+          "/backdrop/screen0/monitorVirtual-1/workspace0/image-style"
+        )
+      fi
       for prop in "${xfce_style[@]}"; do
-        xfconf-query -c xfce4-desktop -p "${prop}" -s 5 >/dev/null 2>&1 || true
+        xfconf-query -c xfce4-desktop -p "${prop}" --create -t int -s 5 >/dev/null 2>&1 || true
       done
+    fi
+    if [[ "${xfce_applied}" -eq 1 ]]; then
+      xfdesktop --reload >/dev/null 2>&1 || true
       applied=1
     fi
   fi
 
-  if command -v gsettings >/dev/null 2>&1; then
-    gsettings set org.gnome.desktop.background picture-uri "${uri}" >/dev/null 2>&1 || true
+  if command -v gsettings >/dev/null 2>&1 && [[ "${desktop_env}" == *"GNOME"* ]]; then
+    gsettings set org.gnome.desktop.background picture-uri "${uri}" >/dev/null 2>&1 && gnome_applied=1 || true
     gsettings set org.gnome.desktop.background picture-uri-dark "${uri}" >/dev/null 2>&1 || true
-    gsettings set org.mate.background picture-filename "${wallpaper}" >/dev/null 2>&1 || true
-    applied=1
+    [[ "${gnome_applied}" -eq 1 ]] && applied=1
   fi
 
-  if command -v plasma-apply-wallpaperimage >/dev/null 2>&1; then
-    plasma-apply-wallpaperimage "${wallpaper}" >/dev/null 2>&1 || true
-    applied=1
+  if command -v gsettings >/dev/null 2>&1 && [[ "${desktop_env}" == *"MATE"* ]]; then
+    gsettings set org.mate.background picture-filename "${wallpaper}" >/dev/null 2>&1 && mate_applied=1 || true
+    [[ "${mate_applied}" -eq 1 ]] && applied=1
+  fi
+
+  if command -v plasma-apply-wallpaperimage >/dev/null 2>&1 && [[ "${desktop_env}" == *"KDE"* ]]; then
+    plasma-apply-wallpaperimage "${wallpaper}" >/dev/null 2>&1 && kde_applied=1 || true
+    [[ "${kde_applied}" -eq 1 ]] && applied=1
   fi
 
   if [[ "${applied}" -eq 1 ]]; then
