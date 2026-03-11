@@ -1,0 +1,67 @@
+# Kali-Parrot Setup
+
+Scripts para personalizar entornos **Kali Linux** o **Parrot OS**.
+
+## Incluye (fase inicial)
+
+- zsh
+- kitty
+- bat (sharkdp) / batcat (compatibilidad Debian/Kali)
+- lsd
+- flameshot
+- Atajo `PrtSc` configurado para abrir `flameshot gui` (XFCE/GNOME, best-effort)
+- Oh My Zsh
+- Powerlevel10k
+- zsh-autosuggestions
+- zsh-syntax-highlighting
+- zsh-sudo (plugin `sudo` de Oh My Zsh)
+- Fuente `Hack Nerd Font`
+- gomap
+- Fondo por defecto empaquetado en `assets/Walpaper.jpg` y copiado a `~/Pictures/Walpaper.jpg`
+- Modo visual opcional `--dark-katana` (Kali-Dark + Flat-Remix-Blue-Dark + Kitty en paleta katana)
+- Widget en barra superior de XFCE con iconos de color para LAN/DOCKER/TARGET/VPN (usa ruta absoluta al script)
+
+## Uso
+
+```bash
+chmod +x install.sh
+./install.sh
+
+# Estilo oscuro tipo katana (opcional)
+./install.sh --dark-katana
+```
+
+## Notas
+
+- El script está pensado para ejecutarse como usuario normal con permisos `sudo`.
+- Si no tienes `sudo`, ejecútalo como root ajustando el entorno manualmente.
+- Si quieres usar `zsh` como shell por defecto, el script intentará configurarlo automáticamente.
+- Antes de modificar `~/.zshrc` y `~/.p10k.zsh`, el script crea backups en `~/.config/kali-parrot-setup/backups/<timestamp>/`.
+- También respalda configuración de XFCE antes de tocar panel/atajos/fondo (`xfce4-panel.xml`, `xfce4-keyboard-shortcuts.xml`, `xfce4-desktop.xml`) en esa misma ruta.
+- Configura también el entorno de `root` (Oh My Zsh + plugins + `.zshrc` + `.p10k.zsh`) con prompt rojo y calavera para `os_icon`, guardando backups de `/root/.zshrc` y `/root/.p10k.zsh` en la misma carpeta de backups.
+
+## Widget (barra superior XFCE)
+
+- El script crea el archivo del widget en `~/.local/bin/xfce-panel-netinfo.sh`.
+- El widget muestra con iconos Nerd Font:
+  - LAN (IP local de salida)
+  - Docker (`docker0`)
+  - TARGET (desde `~/.config/target`, configurable con `settarget`)
+  - VPN (`tun0` / `turn0` / `wg0`)
+- El comando del plugin se guarda con **ruta absoluta** para evitar errores de "fichero no encontrado".
+- El script no reordena ni reconstruye el panel automáticamente (para evitar desconfigurarlo).
+
+### Activación manual recomendada
+
+1. En el panel XFCE: clic derecho `Panel > Add New Items...`
+2. Añade `Generic Monitor`
+3. Configura el comando como: `/home/TU_USUARIO/.local/bin/xfce-panel-netinfo.sh`
+4. Intervalo recomendado: `5` segundos
+5. Activa `Use markup` para colores/iconos
+6. Quitar check de `Etiqueta`
+
+### Solución rápida de problemas
+
+- Si no aparece: reinicia panel con `xfce4-panel -r`
+- Si no carga iconos: confirma fuente Nerd Font activa en el sistema
+- Si `TARGET` sale vacío: usa `settarget <IP_o_host>` y luego `tshow`
