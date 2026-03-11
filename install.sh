@@ -132,7 +132,7 @@ upsert_root_p10k_source_block() {
     $0 == start { in_block=1; next }
     $0 == end { in_block=0; next }
     !in_block { print }
-  ' "${file}" > "${tmp}"
+  ' "${file}" | ${SUDO} tee "${tmp}" >/dev/null
   ${SUDO} mv "${tmp}" "${file}"
 
   ${SUDO} tee -a "${file}" >/dev/null <<'P10K_ROOT_SOURCE_BLOCK'
