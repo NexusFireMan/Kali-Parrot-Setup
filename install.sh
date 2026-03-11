@@ -127,8 +127,8 @@ upsert_root_p10k_source_block() {
   local end="# <<< kali-parrot-p10k-source <<<"
   local tmp
 
-  tmp="$(mktemp)"
-  awk -v start="${start}" -v end="${end}" '
+  tmp="$(${SUDO} mktemp)"
+  ${SUDO} awk -v start="${start}" -v end="${end}" '
     $0 == start { in_block=1; next }
     $0 == end { in_block=0; next }
     !in_block { print }
