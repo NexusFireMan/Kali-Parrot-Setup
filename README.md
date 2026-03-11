@@ -6,7 +6,7 @@ Scripts para personalizar entornos **Kali Linux** o **Parrot OS**.
 
 - zsh
 - kitty
-- bat (sharkdp) / batcat (compatibilidad Debian/Kali)
+- bat desde release oficial de `sharkdp/bat` (con fallback a `batcat` en Debian/Kali)
 - lsd
 - flameshot
 - Atajo `PrtSc` configurado para abrir `flameshot gui` (XFCE/GNOME, best-effort)
