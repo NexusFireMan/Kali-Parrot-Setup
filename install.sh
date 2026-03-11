@@ -185,33 +185,41 @@ set_wallpaper() {
   fi
 
   if command -v xfconf-query >/dev/null 2>&1; then
+    local xfce_props=()
+    local xfce_style=()
+    local xfce_roots=()
     backup_file "${xfce_desktop_xml}"
     mapfile -t xfce_props < <(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep -E '/last-image$' || true)
-    if [[ ${#xfce_props[@]} -eq 0 ]]; then
-      xfce_props=(
-        "/backdrop/screen0/monitor0/workspace0/last-image"
-        "/backdrop/screen0/monitorHDMI-0/workspace0/last-image"
-        "/backdrop/screen0/monitorVirtual-1/workspace0/last-image"
+    mapfile -t xfce_roots < <(
+      xfconf-query -c xfce4-desktop -l 2>/dev/null \
+        | grep -Eo '/backdrop/screen[0-9]+/monitor[^/]+' \
+        | sort -u || true
+    )
+    if [[ ${#xfce_roots[@]} -eq 0 ]]; then
+      xfce_roots=(
+        "/backdrop/screen0/monitor0"
+        "/backdrop/screen0/monitorHDMI-0"
+        "/backdrop/screen0/monitorVirtual-1"
       )
     fi
-    if [[ ${#xfce_props[@]} -gt 0 ]]; then
-      for prop in "${xfce_props[@]}"; do
-        xfconf-query -c xfce4-desktop -p "${prop}" --create -t string -s "${wallpaper}" >/dev/null 2>&1 && xfce_applied=1 || true
-      done
-      mapfile -t xfce_style < <(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep -E '/image-style$' || true)
-      if [[ ${#xfce_style[@]} -eq 0 ]]; then
-        xfce_style=(
-          "/backdrop/screen0/monitor0/workspace0/image-style"
-          "/backdrop/screen0/monitorHDMI-0/workspace0/image-style"
-          "/backdrop/screen0/monitorVirtual-1/workspace0/image-style"
-        )
-      fi
-      for prop in "${xfce_style[@]}"; do
-        xfconf-query -c xfce4-desktop -p "${prop}" --create -t int -s 5 >/dev/null 2>&1 || true
-      done
-    fi
+
+    # Force single workspace mode to simplify backdrop keys across fresh installs.
+    xfconf-query -c xfce4-desktop -p "/backdrop/single-workspace-mode" --create -t bool -s true >/dev/null 2>&1 || true
+    xfconf-query -c xfce4-desktop -p "/backdrop/single-workspace-number" --create -t int -s 0 >/dev/null 2>&1 || true
+
+    for root in "${xfce_roots[@]}"; do
+      xfconf-query -c xfce4-desktop -p "${root}/workspace0/last-image" --create -t string -s "${wallpaper}" >/dev/null 2>&1 && xfce_applied=1 || true
+      xfconf-query -c xfce4-desktop -p "${root}/workspace0/image-style" --create -t int -s 5 >/dev/null 2>&1 || true
+      xfconf-query -c xfce4-desktop -p "${root}/last-image" --create -t string -s "${wallpaper}" >/dev/null 2>&1 && xfce_applied=1 || true
+      xfconf-query -c xfce4-desktop -p "${root}/image-path" --create -t string -s "${wallpaper}" >/dev/null 2>&1 && xfce_applied=1 || true
+      xfconf-query -c xfce4-desktop -p "${root}/image-style" --create -t int -s 5 >/dev/null 2>&1 || true
+    done
+
     if [[ "${xfce_applied}" -eq 1 ]]; then
-      xfdesktop --reload >/dev/null 2>&1 || true
+      xfdesktop --reload >/dev/null 2>&1 || {
+        xfdesktop --quit >/dev/null 2>&1 || true
+        nohup xfdesktop >/dev/null 2>&1 &
+      }
       applied=1
     fi
   fi
@@ -584,8 +592,8 @@ typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=()
 typeset -g POWERLEVEL9K_BACKGROUND=
 typeset -g POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR=''
 typeset -g POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR=''
-typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR=' '
-typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR=' '
+typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR=''
+typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR=''
 
 typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='☠'
 typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=196
@@ -755,8 +763,8 @@ typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=()
 typeset -g POWERLEVEL9K_BACKGROUND=
 typeset -g POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR=''
 typeset -g POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR=''
-typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR=' '
-typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR=' '
+typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR=''
+typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR=''
 
 typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=250
 typeset -g POWERLEVEL9K_DIR_FOREGROUND=39
