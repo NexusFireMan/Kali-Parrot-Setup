@@ -142,6 +142,32 @@ upsert_root_p10k_source_block() {
 P10K_ROOT_SOURCE_BLOCK
 }
 
+upsert_ohmyzsh_bootstrap_block() {
+  local file="$1"
+  local start="# >>> kali-parrot-ohmyzsh-bootstrap >>>"
+  local end="# <<< kali-parrot-ohmyzsh-bootstrap <<<"
+  local tmp
+
+  tmp="$(mktemp)"
+  awk -v start="${start}" -v end="${end}" '
+    $0 == start { in_block=1; next }
+    $0 == end { in_block=0; next }
+    !in_block { print }
+  ' "${file}" > "${tmp}"
+  mv "${tmp}" "${file}"
+
+  cat >> "${file}" <<'OHMYZSH_BOOTSTRAP'
+# >>> kali-parrot-ohmyzsh-bootstrap >>>
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="powerlevel10k/powerlevel10k"
+plugins=(git sudo zsh-autosuggestions zsh-syntax-highlighting)
+if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
+  source "$ZSH/oh-my-zsh.sh"
+fi
+# <<< kali-parrot-ohmyzsh-bootstrap <<<
+OHMYZSH_BOOTSTRAP
+}
+
 set_wallpaper() {
   local wallpaper="$1"
   local applied=0
@@ -675,6 +701,8 @@ if grep -q '^plugins=' "${ZSHRC}"; then
 else
   printf '\nplugins=(git sudo zsh-autosuggestions zsh-syntax-highlighting)\n' >> "${ZSHRC}"
 fi
+
+upsert_ohmyzsh_bootstrap_block "${ZSHRC}"
 
 log "Configurando Powerlevel10k..."
 if [[ ! -f "${P10K_FILE}" ]] || grep -q '# >>> kali-parrot-setup-p10k >>>' "${P10K_FILE}"; then
