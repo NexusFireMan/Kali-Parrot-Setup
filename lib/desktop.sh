@@ -214,7 +214,9 @@ setup_plasma_top_panel_netinfo() {
   local build_root="${HOME}/.local/share/kali-parrot-setup/plasmoid-build"
   local package_dir="${build_root}/pentest-dashboard"
   local package_file="${build_root}/pentest-dashboard.plasmoid"
-  local metadata_template="${TEMPLATE_DIR}/plasma-pentest-metadata.json.tmpl"
+  local metadata_template_plasma5="${TEMPLATE_DIR}/plasma-pentest-metadata.json.tmpl"
+  local metadata_template_plasma6="${TEMPLATE_DIR}/plasma-pentest-metadata6.json.tmpl"
+  local metadata_template=""
   local qml_template_plasma6="${TEMPLATE_DIR}/plasma-pentest-main.qml.tmpl"
   local qml_template_plasma5="${TEMPLATE_DIR}/plasma-pentest-main5.qml.tmpl"
   local qml_template=""
@@ -226,7 +228,8 @@ setup_plasma_top_panel_netinfo() {
   cp -f "${panel_template}" "${script_path}"
   chmod +x "${script_path}"
 
-  require_file "${metadata_template}"
+  require_file "${metadata_template_plasma5}"
+  require_file "${metadata_template_plasma6}"
   require_file "${qml_template_plasma6}"
   require_file "${qml_template_plasma5}"
   require_file "${ipinfo_template}"
@@ -234,11 +237,14 @@ setup_plasma_top_panel_netinfo() {
   if command -v kpackagetool6 >/dev/null 2>&1; then
     kpackagetool="kpackagetool6"
     qml_template="${qml_template_plasma6}"
+    metadata_template="${metadata_template_plasma6}"
   elif command -v kpackagetool5 >/dev/null 2>&1; then
     kpackagetool="kpackagetool5"
     qml_template="${qml_template_plasma5}"
+    metadata_template="${metadata_template_plasma5}"
   else
     qml_template="${qml_template_plasma6}"
+    metadata_template="${metadata_template_plasma6}"
   fi
 
   rm -rf "${package_dir}"
@@ -261,10 +267,12 @@ setup_plasma_top_panel_netinfo() {
         cd "${build_root}"
         zip -qr "$(basename "${package_file}")" pentest-dashboard
       )
+      "${kpackagetool}" -t Plasma/Applet -r pentest.ipwidget >/dev/null 2>&1 || true
       "${kpackagetool}" -t Plasma/Applet -r "${plasmoid_id}" >/dev/null 2>&1 || true
       "${kpackagetool}" -t Plasma/Applet -i "${package_file}" >/dev/null 2>&1 || true
       log "Plasmoid instalado desde paquete: ${package_file}"
     else
+      "${kpackagetool}" -t Plasma/Applet -r pentest.ipwidget >/dev/null 2>&1 || true
       "${kpackagetool}" -t Plasma/Applet -r "${plasmoid_id}" >/dev/null 2>&1 || true
       "${kpackagetool}" -t Plasma/Applet -i "${package_dir}" >/dev/null 2>&1 || true
       warn "No se encontró 'zip'; instalado desde directorio ${package_dir}."

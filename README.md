@@ -40,7 +40,7 @@ chmod +x install.sh
   - `zsh-managed-block.zsh`
   - `kitty-katana-dark.conf`, `kitty-managed.conf.tmpl`
   - `xfce-panel-netinfo.sh.tmpl`, `plasma-panel-netinfo.sh.tmpl`
-  - `plasma-pentest-metadata.json.tmpl`, `plasma-pentest-main.qml.tmpl`, `plasma-pentest-main5.qml.tmpl`, `plasma-pentest-ipinfo.sh.tmpl`
+  - `plasma-pentest-metadata.json.tmpl`, `plasma-pentest-metadata6.json.tmpl`, `plasma-pentest-main.qml.tmpl`, `plasma-pentest-main5.qml.tmpl`, `plasma-pentest-ipinfo.sh.tmpl`
 
 ## Alias y funciones añadidas
 
@@ -113,7 +113,7 @@ chmod +x install.sh
 
 1. El script crea el plasmoid en `~/.local/share/plasma/plasmoids/pentest.dashboard`.
 2. Genera el paquete `~/.local/share/kali-parrot-setup/plasmoid-build/pentest-dashboard.plasmoid`.
-3. Si existe `kpackagetool6` o `kpackagetool5`, lo instala automáticamente.
+3. Si existe `kpackagetool6` o `kpackagetool5`, lo instala automáticamente (con plantilla compatible con la versión de Plasma detectada).
 4. En Plasma: `Editar panel -> Añadir widgets` y busca `Pentest Dashboard Mini`.
 5. El widget lee `TARGET` desde `~/.config/target` (o variable de entorno `TARGET`) y refresca cada 4 segundos.
 
