@@ -37,6 +37,17 @@ set_wallpaper() {
     xfconf-query -c xfce4-desktop -p "/backdrop/single-workspace-mode" --create -t bool -s true >/dev/null 2>&1 || true
     xfconf-query -c xfce4-desktop -p "/backdrop/single-workspace-number" --create -t int -s 0 >/dev/null 2>&1 || true
 
+    # First, force all existing last-image properties discovered in this session.
+    # This covers fresh and customized XFCE desktop channel layouts.
+    if [[ ${#xfce_props[@]} -gt 0 ]]; then
+      local prop style_prop
+      for prop in "${xfce_props[@]}"; do
+        xfconf-query -c xfce4-desktop -p "${prop}" --create -t string -s "${wallpaper}" >/dev/null 2>&1 && xfce_applied=1 || true
+        style_prop="${prop%/last-image}/image-style"
+        xfconf-query -c xfce4-desktop -p "${style_prop}" --create -t int -s 5 >/dev/null 2>&1 || true
+      done
+    fi
+
     for root in "${xfce_roots[@]}"; do
       xfconf-query -c xfce4-desktop -p "${root}/workspace0/last-image" --create -t string -s "${wallpaper}" >/dev/null 2>&1 && xfce_applied=1 || true
       xfconf-query -c xfce4-desktop -p "${root}/workspace0/image-style" --create -t int -s 5 >/dev/null 2>&1 || true

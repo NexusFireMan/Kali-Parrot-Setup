@@ -122,6 +122,8 @@ section "Configuracion de shell"
 configure_user_zsh
 install_gomap
 configure_root_zsh
+log "Configurando Kitty..."
+configure_kitty_katana
 
 section "Fuentes y wallpaper"
 install_hack_nerd_font

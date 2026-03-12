@@ -54,6 +54,4 @@ apply_dark_katana_theme() {
     gsettings set org.gnome.desktop.interface font-name 'Hack Nerd Font 11' >/dev/null 2>&1 || true
     gsettings set org.gnome.desktop.interface monospace-font-name 'Hack Nerd Font Mono 11' >/dev/null 2>&1 || true
   fi
-
-  configure_kitty_katana
 }

@@ -3,11 +3,20 @@
 set_flameshot_prtsc() {
   local applied=0
   local xfce_kb_xml="${HOME}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml"
+  local mate_applied=0
 
   if command -v xfconf-query >/dev/null 2>&1; then
     backup_file "${xfce_kb_xml}"
     xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/Print" -n -t string -s "flameshot gui" >/dev/null 2>&1 || \
       xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/Print" -s "flameshot gui" >/dev/null 2>&1 || true
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Print>" -n -t string -s "flameshot gui" >/dev/null 2>&1 || \
+      xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/<Print>" -s "flameshot gui" >/dev/null 2>&1 || true
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/Print Screen" -n -t string -s "flameshot gui" >/dev/null 2>&1 || \
+      xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/custom/Print Screen" -s "flameshot gui" >/dev/null 2>&1 || true
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/default/Print" -n -t string -s "" >/dev/null 2>&1 || \
+      xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/default/Print" -s "" >/dev/null 2>&1 || true
+    xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/default/<Print>" -n -t string -s "" >/dev/null 2>&1 || \
+      xfconf-query -c xfce4-keyboard-shortcuts -p "/commands/default/<Print>" -s "" >/dev/null 2>&1 || true
     applied=1
   fi
 
@@ -23,6 +32,20 @@ set_flameshot_prtsc() {
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:${kb_path} command "flameshot gui" >/dev/null 2>&1 || true
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:${kb_path} binding "Print" >/dev/null 2>&1 || true
     applied=1
+
+    # MATE/Parrot fallback paths.
+    gsettings set org.mate.SettingsDaemon.plugins.media-keys screenshot "['disabled']" >/dev/null 2>&1 && mate_applied=1 || true
+    gsettings set org.mate.SettingsDaemon.plugins.media-keys window-screenshot "['disabled']" >/dev/null 2>&1 || true
+    gsettings set org.mate.SettingsDaemon.plugins.media-keys area-screenshot "['disabled']" >/dev/null 2>&1 || true
+
+    gsettings set org.mate.Marco.global-keybindings run-command-screenshot "disabled" >/dev/null 2>&1 || true
+    gsettings set org.mate.Marco.global-keybindings run-command-window-screenshot "disabled" >/dev/null 2>&1 || true
+    gsettings set org.mate.Marco.global-keybindings run-command-terminal "disabled" >/dev/null 2>&1 || true
+
+    gsettings set org.mate.Marco.keybinding-commands command-screenshot "flameshot gui" >/dev/null 2>&1 && mate_applied=1 || true
+    gsettings set org.mate.Marco.global-keybindings run-command-screenshot "Print" >/dev/null 2>&1 && mate_applied=1 || true
+
+    [[ "${mate_applied}" -eq 1 ]] && applied=1
   fi
 
   if [[ "${applied}" -eq 1 ]]; then
