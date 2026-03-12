@@ -261,6 +261,22 @@ ensure_repo_wallpaper() {
   log "Wallpaper copiado a ${dest_wallpaper}"
 }
 
+resolve_repo_wallpaper() {
+  local candidates=(
+    "${SCRIPT_DIR}/assets/Walpaper.jpg"
+    "${SCRIPT_DIR}/assets/Wallpaper.jpg"
+    "${SCRIPT_DIR}/assets/wallpaper.jpg"
+  )
+  local f
+  for f in "${candidates[@]}"; do
+    if [[ -f "${f}" ]]; then
+      printf '%s\n' "${f}"
+      return 0
+    fi
+  done
+  return 1
+}
+
 set_flameshot_prtsc() {
   local applied=0
   local xfce_kb_xml="${HOME}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml"
@@ -531,8 +547,6 @@ KITTY_THEME
 # >>> kali-parrot-kitty >>>
 enable_audio_bell no
 
-include color.ini
-
 font_family      HackNerdFont
 font_size 10
 
@@ -729,6 +743,7 @@ P10K_FILE="${HOME}/.p10k.zsh"
 FONT_DIR="${HOME}/.local/share/fonts/HackNerdFont"
 REPO_WALLPAPER_FILE="${SCRIPT_DIR}/assets/Walpaper.jpg"
 WALLPAPER_FILE="${HOME}/Pictures/Walpaper.jpg"
+WALLPAPER_FILE_ALT="${HOME}/Pictures/Wallpaper.jpg"
 
 print_banner
 section "Paquetes base"
@@ -1038,10 +1053,19 @@ unzip -o -q "${TMP_DIR}/Hack.zip" -d "${FONT_DIR}"
 fc-cache -f "${HOME}/.local/share/fonts" >/dev/null 2>&1 || true
 
 log "Copiando wallpaper desde el repositorio..."
-ensure_repo_wallpaper "${REPO_WALLPAPER_FILE}" "${WALLPAPER_FILE}"
+if REPO_WALLPAPER_FILE="$(resolve_repo_wallpaper)"; then
+  ensure_repo_wallpaper "${REPO_WALLPAPER_FILE}" "${WALLPAPER_FILE}"
+  ensure_repo_wallpaper "${REPO_WALLPAPER_FILE}" "${WALLPAPER_FILE_ALT}"
+else
+  warn "No se encontró wallpaper en assets/ (Walpaper.jpg/Wallpaper.jpg)."
+fi
 
 log "Configurando fondo de pantalla por defecto..."
-set_wallpaper "${WALLPAPER_FILE}"
+if [[ -f "${WALLPAPER_FILE}" ]]; then
+  set_wallpaper "${WALLPAPER_FILE}"
+elif [[ -f "${WALLPAPER_FILE_ALT}" ]]; then
+  set_wallpaper "${WALLPAPER_FILE_ALT}"
+fi
 
 if [[ "${DARK_KATANA}" -eq 1 ]]; then
   apply_dark_katana_theme

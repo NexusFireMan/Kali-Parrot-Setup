@@ -17,7 +17,7 @@ Scripts para personalizar entornos **Kali Linux** o **Parrot OS**.
 - zsh-sudo (plugin `sudo` de Oh My Zsh)
 - Fuente `Hack Nerd Font`
 - gomap
-- Fondo por defecto empaquetado en `assets/Walpaper.jpg` y copiado a `~/Pictures/Walpaper.jpg`
+- Fondo por defecto empaquetado en `assets/` (`Walpaper.jpg` o `Wallpaper.jpg`) y copiado a `~/Pictures/`
 - Modo visual opcional `--dark-katana` (Kali-Dark + Flat-Remix-Blue-Dark + Kitty en paleta katana)
 - Widget en barra superior de XFCE con iconos de color para LAN/DOCKER/TARGET/VPN (usa ruta absoluta al script)
 - En `--dark-katana`, Kitty queda con bloque gestionado (fuente, opacidad, tabs, mappings y paleta katana).
