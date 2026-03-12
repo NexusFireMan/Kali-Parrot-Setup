@@ -2,6 +2,11 @@
 
 Scripts para personalizar entornos **Kali Linux** o **Parrot OS**.
 
+## Estado
+
+- Versión actual orientada a uso diario en laboratorios CTF/pentesting.
+- Flujo estabilizado para escritorios `XFCE`, `MATE` y `Plasma` (incluyendo Plasma 6).
+
 ## Incluye
 
 - zsh
@@ -74,6 +79,13 @@ chmod +x install.sh
 - También respalda configuración de XFCE antes de tocar panel/atajos/fondo (`xfce4-panel.xml`, `xfce4-keyboard-shortcuts.xml`, `xfce4-desktop.xml`) en esa misma ruta.
 - Configura también el entorno de `root` (Oh My Zsh + plugins + `.zshrc` + `.p10k.zsh`) con prompt rojo y calavera para `os_icon`, guardando backups de `/root/.zshrc` y `/root/.p10k.zsh` en la misma carpeta de backups.
 
+## Compatibilidad de escritorio
+
+- `XFCE`: atajo `PrtSc`, widget `Generic Monitor`, wallpaper y ajustes de tema soportados.
+- `MATE`: atajo `PrtSc` (ruta `Marco`) soportado; panel/widget se mantiene manual.
+- `Plasma 5/6`: atajo `PrtSc` (desactiva Spectacle + asigna Flameshot), `Command Output` y plasmoid `Pentest Dashboard Mini`.
+- `GNOME`: atajo `PrtSc` por custom keybinding soportado en modo best-effort.
+
 ## Widget (barra superior XFCE y Plasma)
 
 ![Widget XFCE](pics/image.png)
@@ -122,3 +134,5 @@ chmod +x install.sh
 - Si no aparece: reinicia panel con `xfce4-panel -r`
 - Si no carga iconos: confirma fuente Nerd Font activa en el sistema
 - Si `TARGET` sale vacío: usa `settarget <IP_o_host>` y luego `tshow`
+- Si el plasmoid de Plasma no refresca: revisa `~/.cache/kali-parrot-setup/plasmoid-network.log`
+- Si cambias plantillas de plasmoid, reinstala con `./install.sh` y vuelve a añadir el widget al panel.

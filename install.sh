@@ -96,6 +96,7 @@ install_hack_nerd_font() {
 }
 
 print_banner
+log "Escritorio detectado: $(detect_desktop_env)"
 
 section "Paquetes base"
 install_base_packages
