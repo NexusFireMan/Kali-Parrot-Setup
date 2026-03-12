@@ -250,9 +250,9 @@ setup_plasma_top_panel_netinfo() {
   rm -rf "${package_dir}"
   mkdir -p "${package_dir}/contents/ui" "${package_dir}/contents/scripts" "${plasmoid_root}/contents/ui" "${plasmoid_root}/contents/scripts"
   cp -f "${metadata_template}" "${package_dir}/metadata.json"
-  cp -f "${qml_template}" "${package_dir}/contents/ui/main.qml"
   cp -f "${ipinfo_template}" "${package_dir}/contents/scripts/network.sh"
   chmod +x "${package_dir}/contents/scripts/network.sh"
+  render_template "${qml_template}" "PLASMOID_SCRIPT=${plasmoid_root}/contents/scripts/network.sh" > "${package_dir}/contents/ui/main.qml"
 
   # Keep unpacked copy under ~/.local/share/plasma/plasmoids as fallback/manual install source.
   cp -f "${package_dir}/metadata.json" "${plasmoid_root}/metadata.json"
