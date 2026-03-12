@@ -209,9 +209,15 @@ setup_xfce_top_panel_netinfo() {
 setup_plasma_top_panel_netinfo() {
   local script_path="${HOME}/.local/bin/plasma-panel-netinfo.sh"
   local panel_template="${TEMPLATE_DIR}/plasma-panel-netinfo.sh.tmpl"
-  local plasmoid_root="${HOME}/.local/share/plasma/plasmoids/pentest.ipwidget"
+  local plasmoid_id="pentest.dashboard"
+  local plasmoid_root="${HOME}/.local/share/plasma/plasmoids/${plasmoid_id}"
+  local build_root="${HOME}/.local/share/kali-parrot-setup/plasmoid-build"
+  local package_dir="${build_root}/pentest-dashboard"
+  local package_file="${build_root}/pentest-dashboard.plasmoid"
   local metadata_template="${TEMPLATE_DIR}/plasma-pentest-metadata.json.tmpl"
-  local qml_template="${TEMPLATE_DIR}/plasma-pentest-main.qml.tmpl"
+  local qml_template_plasma6="${TEMPLATE_DIR}/plasma-pentest-main.qml.tmpl"
+  local qml_template_plasma5="${TEMPLATE_DIR}/plasma-pentest-main5.qml.tmpl"
+  local qml_template=""
   local ipinfo_template="${TEMPLATE_DIR}/plasma-pentest-ipinfo.sh.tmpl"
   local kpackagetool=""
 
@@ -221,26 +227,51 @@ setup_plasma_top_panel_netinfo() {
   chmod +x "${script_path}"
 
   require_file "${metadata_template}"
-  require_file "${qml_template}"
+  require_file "${qml_template_plasma6}"
+  require_file "${qml_template_plasma5}"
   require_file "${ipinfo_template}"
-  mkdir -p "${plasmoid_root}/contents/ui" "${plasmoid_root}/contents/scripts"
-  cp -f "${metadata_template}" "${plasmoid_root}/metadata.json"
-  cp -f "${qml_template}" "${plasmoid_root}/contents/ui/main.qml"
-  cp -f "${ipinfo_template}" "${plasmoid_root}/contents/scripts/ipinfo.sh"
-  chmod +x "${plasmoid_root}/contents/scripts/ipinfo.sh"
 
   if command -v kpackagetool6 >/dev/null 2>&1; then
     kpackagetool="kpackagetool6"
+    qml_template="${qml_template_plasma6}"
   elif command -v kpackagetool5 >/dev/null 2>&1; then
     kpackagetool="kpackagetool5"
-  fi
-  if [[ -n "${kpackagetool}" ]]; then
-    "${kpackagetool}" -t Plasma/Applet -r pentest.ipwidget >/dev/null 2>&1 || true
-    "${kpackagetool}" -t Plasma/Applet -i "${plasmoid_root}" >/dev/null 2>&1 || true
-    log "Plasmoid instalado: pentest.ipwidget"
-    log "En Plasma: Editar panel -> Añadir widgets -> 'Pentest Network Widget'"
+    qml_template="${qml_template_plasma5}"
   else
-    warn "No se encontró kpackagetool5/6; se creó el plasmoid pero no se instaló automáticamente."
+    qml_template="${qml_template_plasma6}"
+  fi
+
+  rm -rf "${package_dir}"
+  mkdir -p "${package_dir}/contents/ui" "${package_dir}/contents/scripts" "${plasmoid_root}/contents/ui" "${plasmoid_root}/contents/scripts"
+  cp -f "${metadata_template}" "${package_dir}/metadata.json"
+  cp -f "${qml_template}" "${package_dir}/contents/ui/main.qml"
+  cp -f "${ipinfo_template}" "${package_dir}/contents/scripts/network.sh"
+  chmod +x "${package_dir}/contents/scripts/network.sh"
+
+  # Keep unpacked copy under ~/.local/share/plasma/plasmoids as fallback/manual install source.
+  cp -f "${package_dir}/metadata.json" "${plasmoid_root}/metadata.json"
+  cp -f "${package_dir}/contents/ui/main.qml" "${plasmoid_root}/contents/ui/main.qml"
+  cp -f "${package_dir}/contents/scripts/network.sh" "${plasmoid_root}/contents/scripts/network.sh"
+
+  if [[ -n "${kpackagetool}" ]]; then
+    mkdir -p "${build_root}"
+    if command -v zip >/dev/null 2>&1; then
+      rm -f "${package_file}"
+      (
+        cd "${build_root}"
+        zip -qr "$(basename "${package_file}")" pentest-dashboard
+      )
+      "${kpackagetool}" -t Plasma/Applet -r "${plasmoid_id}" >/dev/null 2>&1 || true
+      "${kpackagetool}" -t Plasma/Applet -i "${package_file}" >/dev/null 2>&1 || true
+      log "Plasmoid instalado desde paquete: ${package_file}"
+    else
+      "${kpackagetool}" -t Plasma/Applet -r "${plasmoid_id}" >/dev/null 2>&1 || true
+      "${kpackagetool}" -t Plasma/Applet -i "${package_dir}" >/dev/null 2>&1 || true
+      warn "No se encontró 'zip'; instalado desde directorio ${package_dir}."
+    fi
+    log "En Plasma: Editar panel -> Añadir widgets -> 'Pentest Dashboard Mini'"
+  else
+    warn "No se encontró kpackagetool5/6; se creó el plasmoid en ${plasmoid_root}."
   fi
 
   log "Plasma detectado: script de netinfo creado en ${script_path}."
