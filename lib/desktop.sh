@@ -4,6 +4,7 @@ set_flameshot_prtsc() {
   local applied=0
   local xfce_kb_xml="${HOME}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml"
   local mate_applied=0
+  local i cmd_key bind_key current_cmd
 
   if command -v xfconf-query >/dev/null 2>&1; then
     backup_file "${xfce_kb_xml}"
@@ -44,6 +45,19 @@ set_flameshot_prtsc() {
 
     gsettings set org.mate.Marco.keybinding-commands command-screenshot "flameshot gui" >/dev/null 2>&1 && mate_applied=1 || true
     gsettings set org.mate.Marco.global-keybindings run-command-screenshot "Print" >/dev/null 2>&1 && mate_applied=1 || true
+
+    # Parrot/MATE "custom shortcut" style: bind first free run-command-N to Print.
+    for i in $(seq 1 12); do
+      cmd_key="command-${i}"
+      bind_key="run-command-${i}"
+      current_cmd="$(gsettings get org.mate.Marco.keybinding-commands "${cmd_key}" 2>/dev/null || true)"
+      if [[ "${current_cmd}" == "''" || "${current_cmd}" == "'flameshot gui'" ]]; then
+        gsettings set org.mate.Marco.keybinding-commands "${cmd_key}" "flameshot gui" >/dev/null 2>&1 || true
+        gsettings set org.mate.Marco.global-keybindings "${bind_key}" "Print" >/dev/null 2>&1 || true
+        mate_applied=1
+        break
+      fi
+    done
 
     [[ "${mate_applied}" -eq 1 ]] && applied=1
   fi
