@@ -41,6 +41,29 @@ chmod +x install.sh
   - `kitty-katana-dark.conf`, `kitty-managed.conf.tmpl`
   - `xfce-panel-netinfo.sh.tmpl`
 
+## Alias y funciones añadidas
+
+### Alias
+
+- `cat`: usa `bat`.
+- `catn`: `bat --style=plain`.
+- `catnp`: `bat --style=plain --paging=never`.
+- `ls`: usa `lsd --group-dirs=first`.
+- `l`: `lsd --group-dirs=first`.
+- `la`: `lsd -a --group-dirs=first`.
+- `ll`: `lsd -lh --group-dirs=first`.
+- `lla`: `lsd -lha --group-dirs=first`.
+- `pyserver`: levanta servidor HTTP rápido en puerto 80 (`python3 -m http.server 80`).
+- `tshow`: alias de `showtarget`.
+
+### Funciones
+
+- `settarget <valor>`: guarda el TARGET persistente en `~/.config/target` y exporta la variable `TARGET`.
+- `showtarget`: muestra el valor actual de `TARGET`.
+- `cleartarget`: limpia el TARGET guardado y desexporta `TARGET`.
+- `testGo <nombre_maquina>`: crea estructura de directorios de trabajo (`enum/nmap`, `enum/web`, `burst`, `tmp`, `post`) y entra en `enum/nmap`.
+- `extractPorts <archivo_nmap>`: extrae IP/puertos abiertos de salida de Nmap y copia los puertos al portapapeles si `xclip` está disponible.
+
 ## Notas
 
 - El script está pensado para ejecutarse como usuario normal con permisos `sudo`.
