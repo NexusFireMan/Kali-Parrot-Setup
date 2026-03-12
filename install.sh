@@ -6,6 +6,7 @@ set -euo pipefail
 
 SCRIPT_NAME="$(basename "$0")"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TEMPLATE_DIR="${SCRIPT_DIR}/templates"
 RUN_TS="$(date +%Y%m%d-%H%M%S)"
 BACKUP_DIR="${HOME}/.config/kali-parrot-setup/backups/${RUN_TS}"
 DARK_KATANA=0
@@ -74,6 +75,27 @@ require_cmd() {
     err "Comando requerido no encontrado: $cmd"
     exit 1
   fi
+}
+
+require_file() {
+  local file="$1"
+  if [[ ! -f "${file}" ]]; then
+    err "Fichero requerido no encontrado: ${file}"
+    exit 1
+  fi
+}
+
+render_template() {
+  local template="$1"
+  shift
+  local expr=()
+  local pair key val
+  for pair in "$@"; do
+    key="${pair%%=*}"
+    val="${pair#*=}"
+    expr+=(-e "s|__${key}__|${val}|g")
+  done
+  sed "${expr[@]}" "${template}"
 }
 
 backup_file() {
@@ -389,58 +411,11 @@ install_bat_official() {
 setup_xfce_top_panel_netinfo() {
   local script_path="${HOME}/.local/bin/xfce-panel-netinfo.sh"
   local xfce_panel_xml="${HOME}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
+  local panel_template="${TEMPLATE_DIR}/xfce-panel-netinfo.sh.tmpl"
 
   mkdir -p "${HOME}/.local/bin"
-  cat > "${script_path}" <<'PANEL_NETINFO'
-#!/usr/bin/env bash
-set -u
-
-TARGET_FILE="${HOME}/.config/target"
-
-first_ipv4_from_iface() {
-  local iface="$1"
-  command -v ip >/dev/null 2>&1 || return 1
-  ip -4 -o addr show "${iface}" 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -n1
-}
-
-local_ipv4() {
-  command -v ip >/dev/null 2>&1 || return 1
-  ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src"){print $(i+1); exit}}'
-}
-
-target_ipv4() {
-  local target=""
-  [[ -s "${TARGET_FILE}" ]] && target="$(<"${TARGET_FILE}")"
-  [[ -n "${target}" ]] || return 1
-
-  if [[ "${target}" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-    printf '%s\n' "${target}"
-    return 0
-  fi
-
-  getent ahostsv4 "${target}" 2>/dev/null | awk '{print $1; exit}'
-}
-
-LAN="$(local_ipv4 || true)"
-DOCKER="$(first_ipv4_from_iface docker0 || true)"
-TARGET_IP="$(target_ipv4 || true)"
-VPN="$(first_ipv4_from_iface tun0 || true)"
-[[ -n "${VPN}" ]] || VPN="$(first_ipv4_from_iface turn0 || true)"
-[[ -n "${VPN}" ]] || VPN="$(first_ipv4_from_iface wg0 || true)"
-
-[[ -n "${LAN}" ]] || LAN="-"
-[[ -n "${DOCKER}" ]] || DOCKER="-"
-[[ -n "${TARGET_IP}" ]] || TARGET_IP="-"
-[[ -n "${VPN}" ]] || VPN="-"
-
-ICON_LAN="<span foreground='#4FC3F7'>󰌗</span>"
-ICON_DOCKER="<span foreground='#64B5F6'></span>"
-ICON_TARGET="<span foreground='#FFB74D'>󰓾</span>"
-ICON_VPN="<span foreground='#81C784'>󰏗</span>"
-TEXT="${ICON_LAN} ${LAN}  ${ICON_DOCKER} ${DOCKER}  ${ICON_TARGET} ${TARGET_IP}  ${ICON_VPN} ${VPN}"
-printf '<txt>%s</txt>\n' "${TEXT}"
-printf '<tool>%s</tool>\n' "${TEXT}"
-PANEL_NETINFO
+  require_file "${panel_template}"
+  cp -f "${panel_template}" "${script_path}"
   chmod +x "${script_path}"
 
   if ! command -v xfconf-query >/dev/null 2>&1; then
@@ -484,6 +459,8 @@ configure_kitty_katana() {
   local kitty_dir="${HOME}/.config/kitty"
   local kitty_conf="${kitty_dir}/kitty.conf"
   local katana_theme="${kitty_dir}/katana-dark.conf"
+  local theme_template="${TEMPLATE_DIR}/kitty-katana-dark.conf"
+  local managed_template="${TEMPLATE_DIR}/kitty-managed.conf.tmpl"
   local start="# >>> kali-parrot-kitty >>>"
   local end="# <<< kali-parrot-kitty <<<"
   local tmp
@@ -494,41 +471,9 @@ configure_kitty_katana() {
 
   mkdir -p "${kitty_dir}"
   backup_file "${kitty_conf}"
-
-  cat > "${katana_theme}" <<'KITTY_THEME'
-# Katana dark palette
-foreground            #d8dee9
-background            #0b0e14
-selection_foreground  #0b0e14
-selection_background  #7aa2f7
-cursor                #7aa2f7
-cursor_text_color     #0b0e14
-
-# black
-color0  #1b1f27
-color8  #4b5263
-# red
-color1  #f7768e
-color9  #ff899d
-# green
-color2  #9ece6a
-color10 #b9f27c
-# yellow
-color3  #e0af68
-color11 #ffd280
-# blue
-color4  #7aa2f7
-color12 #9bb8ff
-# magenta
-color5  #bb9af7
-color13 #d3b5ff
-# cyan
-color6  #7dcfff
-color14 #9fe1ff
-# white
-color7  #c0caf5
-color15 #e5e9f0
-KITTY_THEME
+  require_file "${theme_template}"
+  require_file "${managed_template}"
+  cp -f "${theme_template}" "${katana_theme}"
 
   if [[ ! -f "${kitty_conf}" ]]; then
     : > "${kitty_conf}"
@@ -542,62 +487,7 @@ KITTY_THEME
   ' "${kitty_conf}" > "${tmp}"
   mv "${tmp}" "${kitty_conf}"
 
-  cat >> "${kitty_conf}" <<KITTY_MANAGED
-
-# >>> kali-parrot-kitty >>>
-enable_audio_bell no
-
-font_family      HackNerdFont
-font_size 10
-
-disable_ligatures never
-
-url_color #61afef
-url_style curly
-
-map alt+left neighboring_window left
-map alt+right neighboring_window right
-map alt+up neighboring_window up
-map alt+down neighboring_window down
-
-map f1 copy_to_buffer a
-map f2 paste_from_buffer a
-map f3 copy_to_buffer b
-map f4 paste_from_buffer b
-
-cursor_shape beam
-cursor_beam_thickness 6
-
-mouse_hide_wait 3.0
-
-repaint_delay 10
-input_delay 3
-sync_to_monitor yes
-
-map ctrl+shift+z toggle_layout stack
-tab_bar_style powerline
-
-inactive_tab_background #e06c75
-active_tab_background #98c379
-inactive_tab_foreground #000000
-tab_bar_margin_color black
-
-map ctrl+shift+enter new_window_with_cwd
-map ctrl+shift+t new_tab_with_cwd
-
-map ctrl+shift+alt+left resize_window wider
-map ctrl+shift+alt+right resize_window narrower
-map ctrl+shift+alt+up resize_window taller
-map ctrl+shift+alt+down resize_window shorter
-map ctrl+shift+alt+space resize_window reset
-
-background_opacity 0.95
-
-shell ${zsh_bin}
-
-include katana-dark.conf
-# <<< kali-parrot-kitty <<<
-KITTY_MANAGED
+  render_template "${managed_template}" "ZSH_BIN=${zsh_bin}" >> "${kitty_conf}"
 }
 
 apply_dark_katana_theme() {
@@ -629,6 +519,7 @@ configure_root_zsh() {
   local root_custom="${root_zsh_dir}/custom"
   local root_zshrc="${root_home}/.zshrc"
   local root_p10k="${root_home}/.p10k.zsh"
+  local root_p10k_template="${TEMPLATE_DIR}/p10k-root.zsh"
 
   log "Configurando entorno zsh para root..."
   backup_root_file "${root_zshrc}" "root.zshrc.bak"
@@ -655,46 +546,8 @@ configure_root_zsh() {
   ${SUDO} chown root:root "${root_zshrc}"
   ${SUDO} chmod 600 "${root_zshrc}"
 
-  ${SUDO} tee "${root_p10k}" >/dev/null <<'ROOT_P10K'
-# >>> kali-parrot-setup-root-p10k >>>
-# Root-specific Powerlevel10k config: skull + red accents.
-
-typeset -g POWERLEVEL9K_MODE='nerdfont-complete'
-typeset -g POWERLEVEL9K_PROMPT_ON_NEWLINE=false
-typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX=''
-typeset -g POWERLEVEL9K_MULTILINE_LAST_PROMPT_PREFIX=''
-
-typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
-  os_icon
-  dir
-  vcs
-  context
-  command_execution_time
-  status
-)
-typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=()
-
-typeset -g POWERLEVEL9K_BACKGROUND=
-typeset -g POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR=''
-typeset -g POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR=''
-typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR=''
-typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR=''
-
-typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='☠'
-typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=196
-typeset -g POWERLEVEL9K_DIR_FOREGROUND=196
-typeset -g POWERLEVEL9K_VCS_CLEAN_FOREGROUND=76
-typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=220
-typeset -g POWERLEVEL9K_STATUS_OK_FOREGROUND=76
-typeset -g POWERLEVEL9K_STATUS_ERROR_FOREGROUND=196
-
-typeset -g POWERLEVEL9K_SHORTEN_STRATEGY=truncate_to_unique
-typeset -g POWERLEVEL9K_SHORTEN_DIR_LENGTH=2
-
-typeset -g POWERLEVEL9K_STATUS_EXTENDED_STATES=true
-typeset -g POWERLEVEL9K_STATUS_OK=true
-# <<< kali-parrot-setup-root-p10k <<<
-ROOT_P10K
+  require_file "${root_p10k_template}"
+  ${SUDO} cp -f "${root_p10k_template}" "${root_p10k}"
 
   ${SUDO} chown root:root "${root_p10k}"
   ${SUDO} chmod 600 "${root_p10k}"
@@ -740,6 +593,8 @@ ZSH_DIR="${HOME}/.oh-my-zsh"
 ZSH_CUSTOM="${ZSH_CUSTOM:-${ZSH_DIR}/custom}"
 ZSHRC="${HOME}/.zshrc"
 P10K_FILE="${HOME}/.p10k.zsh"
+P10K_USER_TEMPLATE="${TEMPLATE_DIR}/p10k-user.zsh"
+ZSH_MANAGED_TEMPLATE="${TEMPLATE_DIR}/zsh-managed-block.zsh"
 FONT_DIR="${HOME}/.local/share/fonts/HackNerdFont"
 REPO_WALLPAPER_FILE="${SCRIPT_DIR}/assets/Walpaper.jpg"
 WALLPAPER_FILE="${HOME}/Pictures/Walpaper.jpg"
@@ -827,45 +682,8 @@ upsert_ohmyzsh_bootstrap_block "${ZSHRC}"
 log "Configurando Powerlevel10k..."
 if [[ ! -f "${P10K_FILE}" ]] || grep -q '# >>> kali-parrot-setup-p10k >>>' "${P10K_FILE}"; then
   backup_file "${P10K_FILE}"
-  cat > "${P10K_FILE}" <<'P10K_MANAGED'
-# >>> kali-parrot-setup-p10k >>>
-# Minimal Powerlevel10k config: left side with content, right side empty.
-
-typeset -g POWERLEVEL9K_MODE='nerdfont-complete'
-typeset -g POWERLEVEL9K_PROMPT_ON_NEWLINE=false
-typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX=''
-typeset -g POWERLEVEL9K_MULTILINE_LAST_PROMPT_PREFIX=''
-
-typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
-  os_icon
-  dir
-  vcs
-  context
-  command_execution_time
-  status
-)
-typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=()
-
-typeset -g POWERLEVEL9K_BACKGROUND=
-typeset -g POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR=''
-typeset -g POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR=''
-typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR=''
-typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR=''
-
-typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=250
-typeset -g POWERLEVEL9K_DIR_FOREGROUND=39
-typeset -g POWERLEVEL9K_VCS_CLEAN_FOREGROUND=76
-typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=220
-typeset -g POWERLEVEL9K_STATUS_OK_FOREGROUND=76
-typeset -g POWERLEVEL9K_STATUS_ERROR_FOREGROUND=203
-
-typeset -g POWERLEVEL9K_SHORTEN_STRATEGY=truncate_to_unique
-typeset -g POWERLEVEL9K_SHORTEN_DIR_LENGTH=2
-
-typeset -g POWERLEVEL9K_STATUS_EXTENDED_STATES=true
-typeset -g POWERLEVEL9K_STATUS_OK=true
-# <<< kali-parrot-setup-p10k <<<
-P10K_MANAGED
+  require_file "${P10K_USER_TEMPLATE}"
+  cp -f "${P10K_USER_TEMPLATE}" "${P10K_FILE}"
 else
   log "Detectada config personalizada en ${P10K_FILE}; no se sobrescribe."
 fi
@@ -887,157 +705,9 @@ awk -v start="${ZSH_MANAGED_START}" -v end="${ZSH_MANAGED_END}" '
   !in_block { print }
 ' "${ZSHRC}" > "${TMP_ZSHRC}"
 mv "${TMP_ZSHRC}" "${ZSHRC}"
-
-cat >> "${ZSHRC}" <<'ZSH_MANAGED_BLOCK'
-
-# >>> kali-parrot-setup >>>
-# Path local bin (incluye gomap)
-export PATH="$HOME/.local/bin:$PATH"
-
-# Custom Aliases
-# -----------------------------------------------
-
-# bat
-alias cat='bat'
-alias catn='bat --style=plain'
-alias catnp='bat --style=plain --paging=never'
-
-# ls
-alias ll='lsd -lh --group-dirs=first'
-alias la='lsd -a --group-dirs=first'
-alias l='lsd --group-dirs=first'
-alias lla='lsd -lha --group-dirs=first'
-alias ls='lsd --group-dirs=first'
-
-# servidor HTTP rapido
-alias pyserver='python3 -m http.server 80'
-
-# ZSH History
-HISTFILE=~/.zsh_history
-HISTSIZE=10000
-SAVEHIST=10000
-setopt histignorealldups sharehistory
-
-# Use modern completion system
-autoload -Uz compinit
-compinit
-
-zstyle ':completion:*' auto-description 'specify: %d'
-zstyle ':completion:*' completer _expand _complete _correct _approximate
-zstyle ':completion:*' format 'Completing %d'
-zstyle ':completion:*' group-name ''
-zstyle ':completion:*' menu select=2
-eval "$(dircolors -b)"
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
-zstyle ':completion:*' list-colors ''
-zstyle ':completion:*' list-prompt %SAt %p: Hit TAB for more, or the character to insert%s
-zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Z}' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=* l:|=*'
-zstyle ':completion:*' menu select=long
-zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
-zstyle ':completion:*' use-compctl false
-zstyle ':completion:*' verbose true
-
-zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
-zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
-
-# --------------------------------------------
-# Configuracion de TARGET global persistente
-# --------------------------------------------
-
-# Ruta del archivo que guarda el target actual
-TARGET_FILE="${HOME}/.config/target"
-
-# Si el archivo existe y no esta vacio, carga la variable
-if [[ -s "$TARGET_FILE" ]]; then
-  export TARGET="$(<"$TARGET_FILE")"
-fi
-
-# Establece un nuevo TARGET y lo guarda
-settarget() {
-  if [[ -z "$1" ]]; then
-    echo "Uso: settarget <valor>"
-    return 1
-  fi
-
-  mkdir -p "$(dirname "$TARGET_FILE")"
-  echo "$1" > "$TARGET_FILE"
-  export TARGET="$1"
-  echo "TARGET establecido: $TARGET"
-}
-
-# Borra el TARGET actual
-cleartarget() {
-  : > "$TARGET_FILE"
-  unset TARGET
-  echo "TARGET enviado con San Pedro"
-}
-
-# Muestra el valor actual
-showtarget() {
-  if [[ -z "${TARGET:-}" ]]; then
-    echo "TARGET no establecido"
-  else
-    echo "TARGET = $TARGET"
-  fi
-}
-
-# Alias comodo
-alias tshow='showtarget'
-
-# ------------------------------------
-# Creacion de carpetas para maquina
-# ------------------------------------
-function testGo(){
-  if [[ -z "${1:-}" ]]; then
-    echo "Uso: testGo <nombre_maquina>"
-    return 1 2>/dev/null || exit 1
-  fi
-
-  MAQUINA="$1"
-
-  if [[ -d "$MAQUINA" ]]; then
-    echo "[!] El directorio $MAQUINA ya existe"
-    return 1 2>/dev/null || exit 1
-  fi
-
-  if mkdir -p "$MAQUINA"/{enum/nmap,enum/web,burst,tmp,post} && cd "$MAQUINA/enum/nmap"; then
-    echo "[+] Directorio creado. Listo, dale con la silla"
-  else
-    echo "[-] Error al crear directorios"
-    return 1 2>/dev/null || exit 1
-  fi
-}
-
-# -----------------------------------------
-# Extraccion de puertos en nmap grepeable
-# -----------------------------------------
-function extractPorts(){
-  if [[ -z "${1:-}" || ! -f "$1" ]]; then
-    echo "[-] Uso: extractPorts <archivo_nmap>"
-    return 1 2>/dev/null || exit 1
-  fi
-
-  local ports="$(grep -oP '\d{1,5}/open' "$1" | awk -F/ '{print $1}' | xargs | tr ' ' ',')"
-  local ip_address="$(grep -oP '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}' "$1" | sort -u | head -n 1)"
-
-  if [[ -z "$ip_address" ]]; then
-    echo "[-] No se encontro direccion IP en el archivo"
-    return 1 2>/dev/null || exit 1
-  fi
-
-  echo -e "\n[+] Informacion extraida...\n"
-  echo -e "\t[*] Direccion IP: $ip_address"
-  echo -e "\t[*] Puertos abiertos: $ports\n"
-
-  if command -v xclip &> /dev/null; then
-    echo "$ports" | tr -d '\n' | xclip -sel clip
-    echo "[+] Puertos copiados al portapapeles"
-  else
-    echo "[!] xclip no instalado - puertos no copiados"
-  fi
-}
-# <<< kali-parrot-setup <<<
-ZSH_MANAGED_BLOCK
+require_file "${ZSH_MANAGED_TEMPLATE}"
+printf '\n' >> "${ZSHRC}"
+cat "${ZSH_MANAGED_TEMPLATE}" >> "${ZSHRC}"
 
 configure_root_zsh
 

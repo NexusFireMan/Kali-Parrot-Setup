@@ -1,0 +1,37 @@
+# >>> kali-parrot-setup-p10k >>>
+# Minimal Powerlevel10k config: left side with content, right side empty.
+
+typeset -g POWERLEVEL9K_MODE='nerdfont-complete'
+typeset -g POWERLEVEL9K_PROMPT_ON_NEWLINE=false
+typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX=''
+typeset -g POWERLEVEL9K_MULTILINE_LAST_PROMPT_PREFIX=''
+
+typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
+  os_icon
+  dir
+  vcs
+  context
+  command_execution_time
+  status
+)
+typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=()
+
+typeset -g POWERLEVEL9K_BACKGROUND=
+typeset -g POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR=''
+typeset -g POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR=''
+typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR=''
+typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR=''
+
+typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=250
+typeset -g POWERLEVEL9K_DIR_FOREGROUND=39
+typeset -g POWERLEVEL9K_VCS_CLEAN_FOREGROUND=76
+typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=220
+typeset -g POWERLEVEL9K_STATUS_OK_FOREGROUND=76
+typeset -g POWERLEVEL9K_STATUS_ERROR_FOREGROUND=203
+
+typeset -g POWERLEVEL9K_SHORTEN_STRATEGY=truncate_to_unique
+typeset -g POWERLEVEL9K_SHORTEN_DIR_LENGTH=2
+
+typeset -g POWERLEVEL9K_STATUS_EXTENDED_STATES=true
+typeset -g POWERLEVEL9K_STATUS_OK=true
+# <<< kali-parrot-setup-p10k <<<

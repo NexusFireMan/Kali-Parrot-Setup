@@ -32,6 +32,15 @@ chmod +x install.sh
 ./install.sh --dark-katana
 ```
 
+## Estructura
+
+- `install.sh`: orquestador principal (instalación y flujo).
+- `templates/`: bloques reutilizables para mantener el script legible:
+  - `p10k-user.zsh`, `p10k-root.zsh`
+  - `zsh-managed-block.zsh`
+  - `kitty-katana-dark.conf`, `kitty-managed.conf.tmpl`
+  - `xfce-panel-netinfo.sh.tmpl`
+
 ## Notas
 
 - El script está pensado para ejecutarse como usuario normal con permisos `sudo`.
