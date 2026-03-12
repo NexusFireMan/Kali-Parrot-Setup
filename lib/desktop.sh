@@ -34,17 +34,20 @@ set_flameshot_prtsc() {
     gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:${kb_path} binding "Print" >/dev/null 2>&1 || true
     applied=1
 
-    # MATE/Parrot fallback paths.
-    gsettings set org.mate.SettingsDaemon.plugins.media-keys screenshot "['disabled']" >/dev/null 2>&1 && mate_applied=1 || true
-    gsettings set org.mate.SettingsDaemon.plugins.media-keys window-screenshot "['disabled']" >/dev/null 2>&1 || true
-    gsettings set org.mate.SettingsDaemon.plugins.media-keys area-screenshot "['disabled']" >/dev/null 2>&1 || true
+    # MATE/Parrot route.
+    gsettings set org.mate.SettingsDaemon.plugins.media-keys screenshot "disabled" >/dev/null 2>&1 || \
+      gsettings set org.mate.SettingsDaemon.plugins.media-keys screenshot "['disabled']" >/dev/null 2>&1 || true
+    gsettings set org.mate.SettingsDaemon.plugins.media-keys window-screenshot "disabled" >/dev/null 2>&1 || \
+      gsettings set org.mate.SettingsDaemon.plugins.media-keys window-screenshot "['disabled']" >/dev/null 2>&1 || true
+    gsettings set org.mate.SettingsDaemon.plugins.media-keys area-screenshot "disabled" >/dev/null 2>&1 || \
+      gsettings set org.mate.SettingsDaemon.plugins.media-keys area-screenshot "['disabled']" >/dev/null 2>&1 || true
 
+    # Explicit sequence for Marco custom screenshot binding.
     gsettings set org.mate.Marco.global-keybindings run-command-screenshot "disabled" >/dev/null 2>&1 || true
+    gsettings set org.mate.Marco.keybinding-commands command-screenshot "flameshot gui" >/dev/null 2>&1 || true
+    gsettings set org.mate.Marco.global-keybindings run-command-screenshot "Print" >/dev/null 2>&1 || true
     gsettings set org.mate.Marco.global-keybindings run-command-window-screenshot "disabled" >/dev/null 2>&1 || true
     gsettings set org.mate.Marco.global-keybindings run-command-terminal "disabled" >/dev/null 2>&1 || true
-
-    gsettings set org.mate.Marco.keybinding-commands command-screenshot "flameshot gui" >/dev/null 2>&1 && mate_applied=1 || true
-    gsettings set org.mate.Marco.global-keybindings run-command-screenshot "Print" >/dev/null 2>&1 && mate_applied=1 || true
 
     # Parrot/MATE "custom shortcut" style: bind first free run-command-N to Print.
     for i in $(seq 1 12); do
@@ -58,6 +61,15 @@ set_flameshot_prtsc() {
         break
       fi
     done
+
+    # Validate the intended key and fallback to dconf if needed.
+    if [[ "$(gsettings get org.mate.Marco.global-keybindings run-command-screenshot 2>/dev/null || true)" == "'Print'" ]]; then
+      mate_applied=1
+    elif command -v dconf >/dev/null 2>&1; then
+      dconf write /org/mate/marco/keybinding-commands/command-screenshot "'flameshot gui'" >/dev/null 2>&1 || true
+      dconf write /org/mate/marco/global-keybindings/run-command-screenshot "'Print'" >/dev/null 2>&1 || true
+      [[ "$(dconf read /org/mate/marco/global-keybindings/run-command-screenshot 2>/dev/null || true)" == "'Print'" ]] && mate_applied=1 || true
+    fi
 
     [[ "${mate_applied}" -eq 1 ]] && applied=1
   fi
