@@ -72,6 +72,8 @@ chmod +x install.sh
 5. Activa `Use markup` para colores/iconos
 6. Quitar check de `Etiqueta`
 
+![Propiedades Generic Monitor](pics/image1.png)
+
 ### Solución rápida de problemas
 
 - Si no aparece: reinicia panel con `xfce4-panel -r`
