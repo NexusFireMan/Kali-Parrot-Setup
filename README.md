@@ -52,6 +52,8 @@ chmod +x install.sh
 
 ## Widget (barra superior XFCE)
 
+![Widget XFCE](pics/image.png)
+
 - El script crea el archivo del widget en `~/.local/bin/xfce-panel-netinfo.sh`.
 - El widget muestra con iconos Nerd Font:
   - LAN (IP local de salida)
