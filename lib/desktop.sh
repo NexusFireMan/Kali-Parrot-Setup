@@ -1,10 +1,64 @@
 #!/usr/bin/env bash
 
+detect_desktop_env() {
+  local raw="${XDG_CURRENT_DESKTOP:-${DESKTOP_SESSION:-}}"
+  local upper="${raw^^}"
+
+  if [[ "${upper}" == *"PLASMA"* || "${upper}" == *"KDE"* ]]; then
+    printf 'plasma\n'
+  elif [[ "${upper}" == *"XFCE"* ]]; then
+    printf 'xfce\n'
+  elif [[ "${upper}" == *"MATE"* ]]; then
+    printf 'mate\n'
+  elif [[ "${upper}" == *"GNOME"* ]]; then
+    printf 'gnome\n'
+  else
+    printf 'unknown\n'
+  fi
+}
+
+configure_plasma_prtsc() {
+  local kglobal_file="${HOME}/.config/kglobalshortcutsrc"
+  local kwrite=""
+
+  if command -v kwriteconfig6 >/dev/null 2>&1; then
+    kwrite="kwriteconfig6"
+  elif command -v kwriteconfig5 >/dev/null 2>&1; then
+    kwrite="kwriteconfig5"
+  else
+    return 1
+  fi
+
+  backup_file "${kglobal_file}"
+
+  # Disable Spectacle defaults.
+  "${kwrite}" --file kglobalshortcutsrc --group org.kde.spectacle.desktop --key RectangularRegionScreenShot "none,none,none" >/dev/null 2>&1 || true
+  "${kwrite}" --file kglobalshortcutsrc --group org.kde.spectacle.desktop --key FullScreenScreenShot "none,none,none" >/dev/null 2>&1 || true
+  "${kwrite}" --file kglobalshortcutsrc --group org.kde.spectacle.desktop --key CurrentMonitorScreenShot "none,none,none" >/dev/null 2>&1 || true
+  "${kwrite}" --file kglobalshortcutsrc --group org.kde.spectacle.desktop --key ActiveWindowScreenShot "none,none,none" >/dev/null 2>&1 || true
+
+  # Set Flameshot on Print (different builds expose different actions).
+  "${kwrite}" --file kglobalshortcutsrc --group org.flameshot.Flameshot.desktop --key gui "Print,Print,flameshot gui" >/dev/null 2>&1 || true
+  "${kwrite}" --file kglobalshortcutsrc --group org.flameshot.Flameshot.desktop --key launcher "Print,Print,flameshot gui" >/dev/null 2>&1 || true
+  "${kwrite}" --file kglobalshortcutsrc --group org.flameshot.Flameshot.desktop --key Flameshot "Print,Print,flameshot gui" >/dev/null 2>&1 || true
+
+  # Ask KDE services to reload shortcuts when possible.
+  if command -v qdbus >/dev/null 2>&1; then
+    qdbus org.kde.KWin /KWin reconfigure >/dev/null 2>&1 || true
+    qdbus org.kde.kglobalaccel /kglobalaccel org.kde.KGlobalAccel.reloadConfig >/dev/null 2>&1 || true
+  fi
+
+  return 0
+}
+
 set_flameshot_prtsc() {
   local applied=0
+  local desktop_env
   local xfce_kb_xml="${HOME}/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml"
   local mate_applied=0
   local i cmd_key bind_key current_cmd
+
+  desktop_env="$(detect_desktop_env)"
 
   if command -v xfconf-query >/dev/null 2>&1; then
     backup_file "${xfce_kb_xml}"
@@ -42,14 +96,12 @@ set_flameshot_prtsc() {
     gsettings set org.mate.SettingsDaemon.plugins.media-keys area-screenshot "disabled" >/dev/null 2>&1 || \
       gsettings set org.mate.SettingsDaemon.plugins.media-keys area-screenshot "['disabled']" >/dev/null 2>&1 || true
 
-    # Explicit sequence for Marco custom screenshot binding.
     gsettings set org.mate.Marco.global-keybindings run-command-screenshot "disabled" >/dev/null 2>&1 || true
     gsettings set org.mate.Marco.keybinding-commands command-screenshot "flameshot gui" >/dev/null 2>&1 || true
     gsettings set org.mate.Marco.global-keybindings run-command-screenshot "Print" >/dev/null 2>&1 || true
     gsettings set org.mate.Marco.global-keybindings run-command-window-screenshot "disabled" >/dev/null 2>&1 || true
     gsettings set org.mate.Marco.global-keybindings run-command-terminal "disabled" >/dev/null 2>&1 || true
 
-    # Parrot/MATE "custom shortcut" style: bind first free run-command-N to Print.
     for i in $(seq 1 12); do
       cmd_key="command-${i}"
       bind_key="run-command-${i}"
@@ -62,7 +114,6 @@ set_flameshot_prtsc() {
       fi
     done
 
-    # Validate the intended key and fallback to dconf if needed.
     if [[ "$(gsettings get org.mate.Marco.global-keybindings run-command-screenshot 2>/dev/null || true)" == "'Print'" ]]; then
       mate_applied=1
     elif command -v dconf >/dev/null 2>&1; then
@@ -74,6 +125,13 @@ set_flameshot_prtsc() {
     [[ "${mate_applied}" -eq 1 ]] && applied=1
   fi
 
+  if [[ "${desktop_env}" == "plasma" ]]; then
+    if configure_plasma_prtsc; then
+      applied=1
+      log "Plasma detectado: atajo Print configurado para Flameshot (puede requerir reiniciar sesión)."
+    fi
+  fi
+
   if [[ "${applied}" -eq 1 ]]; then
     log "Atajo configurado: PrtSc -> flameshot gui"
   else
@@ -82,6 +140,9 @@ set_flameshot_prtsc() {
 }
 
 install_optional_xfce_panel_plugin() {
+  if [[ "$(detect_desktop_env)" != "xfce" ]]; then
+    return 0
+  fi
   if apt-cache show xfce4-genmon-plugin >/dev/null 2>&1; then
     ${SUDO} apt install -y xfce4-genmon-plugin >/dev/null 2>&1 || true
   fi
@@ -143,4 +204,33 @@ setup_xfce_top_panel_netinfo() {
 
   log "No se modificó el panel automáticamente para evitar desorden."
   log "Añade manualmente un plugin 'Generic Monitor' y pon comando: ${script_path}"
+}
+
+setup_plasma_top_panel_netinfo() {
+  local script_path="${HOME}/.local/bin/plasma-panel-netinfo.sh"
+  local panel_template="${TEMPLATE_DIR}/plasma-panel-netinfo.sh.tmpl"
+
+  mkdir -p "${HOME}/.local/bin"
+  require_file "${panel_template}"
+  cp -f "${panel_template}" "${script_path}"
+  chmod +x "${script_path}"
+
+  log "Plasma detectado: script de netinfo creado en ${script_path}."
+  log "Añade manualmente el widget 'Command Output' al panel y usa comando: ${script_path}"
+  log "Intervalo recomendado: 5 segundos"
+}
+
+setup_top_panel_netinfo() {
+  case "$(detect_desktop_env)" in
+    xfce)
+      setup_xfce_top_panel_netinfo
+      ;;
+    plasma)
+      setup_plasma_top_panel_netinfo
+      ;;
+    *)
+      # Keep backward compatibility: generate XFCE script as generic fallback.
+      setup_xfce_top_panel_netinfo
+      ;;
+  esac
 }

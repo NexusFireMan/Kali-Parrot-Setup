@@ -113,8 +113,8 @@ install_bat_official
 log "Configurando atajo de captura con Flameshot..."
 set_flameshot_prtsc
 
-log "Configurando widget de red en barra superior (XFCE)..."
-setup_xfce_top_panel_netinfo
+log "Configurando widget de red en barra superior (según escritorio)..."
+setup_top_panel_netinfo
 
 section "Oh My Zsh y plugins"
 install_ohmyzsh_and_plugins_user

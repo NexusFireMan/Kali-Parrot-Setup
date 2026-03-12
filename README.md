@@ -9,7 +9,7 @@ Scripts para personalizar entornos **Kali Linux** o **Parrot OS**.
 - bat desde release oficial de `sharkdp/bat` (con fallback a `batcat` en Debian/Kali)
 - lsd
 - flameshot
-- Atajo `PrtSc` configurado para abrir `flameshot gui` (XFCE/GNOME, best-effort)
+- Atajo `PrtSc` configurado para abrir `flameshot gui` con detección de escritorio (XFCE/GNOME/MATE/Plasma, best-effort)
 - Oh My Zsh
 - Powerlevel10k
 - zsh-autosuggestions
@@ -39,7 +39,7 @@ chmod +x install.sh
   - `p10k-user.zsh`, `p10k-root.zsh`
   - `zsh-managed-block.zsh`
   - `kitty-katana-dark.conf`, `kitty-managed.conf.tmpl`
-  - `xfce-panel-netinfo.sh.tmpl`
+  - `xfce-panel-netinfo.sh.tmpl`, `plasma-panel-netinfo.sh.tmpl`
 
 ## Alias y funciones añadidas
 
@@ -73,20 +73,23 @@ chmod +x install.sh
 - También respalda configuración de XFCE antes de tocar panel/atajos/fondo (`xfce4-panel.xml`, `xfce4-keyboard-shortcuts.xml`, `xfce4-desktop.xml`) en esa misma ruta.
 - Configura también el entorno de `root` (Oh My Zsh + plugins + `.zshrc` + `.p10k.zsh`) con prompt rojo y calavera para `os_icon`, guardando backups de `/root/.zshrc` y `/root/.p10k.zsh` en la misma carpeta de backups.
 
-## Widget (barra superior XFCE)
+## Widget (barra superior XFCE y Plasma)
 
 ![Widget XFCE](pics/image.png)
 
 - El script crea el archivo del widget en `~/.local/bin/xfce-panel-netinfo.sh`.
+- En Plasma crea también `~/.local/bin/plasma-panel-netinfo.sh` (para usar con widget `Command Output`).
 - El widget muestra con iconos Nerd Font:
   - LAN (IP local de salida)
   - Docker (`docker0`)
   - TARGET (desde `~/.config/target`, configurable con `settarget`)
   - VPN (`tun0` / `turn0` / `wg0`)
 - El comando del plugin se guarda con **ruta absoluta** para evitar errores de "fichero no encontrado".
-- El script no reordena ni reconstruye el panel automáticamente (para evitar desconfigurarlo).
+- El script no reordena ni reconstruye el panel automáticamente (para evitar desconfigurarlo), tanto en XFCE como en Plasma.
 
 ### Activación manual recomendada
+
+#### XFCE (Generic Monitor)
 
 1. En el panel XFCE: clic derecho `Panel > Add New Items...`
 2. Añade `Generic Monitor`
@@ -96,6 +99,13 @@ chmod +x install.sh
 6. Quitar check de `Etiqueta`
 
 ![Propiedades Generic Monitor](pics/image1.png)
+
+#### Plasma (Command Output)
+
+1. Edita panel y añade el widget `Command Output`.
+2. Configura el comando como: `/home/TU_USUARIO/.local/bin/plasma-panel-netinfo.sh`
+3. Intervalo recomendado: `5` segundos.
+4. (Opcional) Ajusta ancho del widget para mostrar LAN/DOCKER/TARGET/VPN completos.
 
 ### Solución rápida de problemas
 
