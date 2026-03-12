@@ -209,11 +209,39 @@ setup_xfce_top_panel_netinfo() {
 setup_plasma_top_panel_netinfo() {
   local script_path="${HOME}/.local/bin/plasma-panel-netinfo.sh"
   local panel_template="${TEMPLATE_DIR}/plasma-panel-netinfo.sh.tmpl"
+  local plasmoid_root="${HOME}/.local/share/plasma/plasmoids/pentest.ipwidget"
+  local metadata_template="${TEMPLATE_DIR}/plasma-pentest-metadata.json.tmpl"
+  local qml_template="${TEMPLATE_DIR}/plasma-pentest-main.qml.tmpl"
+  local ipinfo_template="${TEMPLATE_DIR}/plasma-pentest-ipinfo.sh.tmpl"
+  local kpackagetool=""
 
   mkdir -p "${HOME}/.local/bin"
   require_file "${panel_template}"
   cp -f "${panel_template}" "${script_path}"
   chmod +x "${script_path}"
+
+  require_file "${metadata_template}"
+  require_file "${qml_template}"
+  require_file "${ipinfo_template}"
+  mkdir -p "${plasmoid_root}/contents/ui" "${plasmoid_root}/contents/scripts"
+  cp -f "${metadata_template}" "${plasmoid_root}/metadata.json"
+  cp -f "${qml_template}" "${plasmoid_root}/contents/ui/main.qml"
+  cp -f "${ipinfo_template}" "${plasmoid_root}/contents/scripts/ipinfo.sh"
+  chmod +x "${plasmoid_root}/contents/scripts/ipinfo.sh"
+
+  if command -v kpackagetool6 >/dev/null 2>&1; then
+    kpackagetool="kpackagetool6"
+  elif command -v kpackagetool5 >/dev/null 2>&1; then
+    kpackagetool="kpackagetool5"
+  fi
+  if [[ -n "${kpackagetool}" ]]; then
+    "${kpackagetool}" -t Plasma/Applet -r pentest.ipwidget >/dev/null 2>&1 || true
+    "${kpackagetool}" -t Plasma/Applet -i "${plasmoid_root}" >/dev/null 2>&1 || true
+    log "Plasmoid instalado: pentest.ipwidget"
+    log "En Plasma: Editar panel -> Añadir widgets -> 'Pentest Network Widget'"
+  else
+    warn "No se encontró kpackagetool5/6; se creó el plasmoid pero no se instaló automáticamente."
+  fi
 
   log "Plasma detectado: script de netinfo creado en ${script_path}."
   log "Añade manualmente el widget 'Command Output' al panel y usa comando: ${script_path}"

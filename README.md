@@ -40,6 +40,7 @@ chmod +x install.sh
   - `zsh-managed-block.zsh`
   - `kitty-katana-dark.conf`, `kitty-managed.conf.tmpl`
   - `xfce-panel-netinfo.sh.tmpl`, `plasma-panel-netinfo.sh.tmpl`
+  - `plasma-pentest-metadata.json.tmpl`, `plasma-pentest-main.qml.tmpl`, `plasma-pentest-ipinfo.sh.tmpl`
 
 ## Alias y funciones añadidas
 
@@ -79,6 +80,7 @@ chmod +x install.sh
 
 - El script crea el archivo del widget en `~/.local/bin/xfce-panel-netinfo.sh`.
 - En Plasma crea también `~/.local/bin/plasma-panel-netinfo.sh` (para usar con widget `Command Output`).
+- En Plasma también crea e instala (si hay `kpackagetool5/6`) el plasmoid `pentest.ipwidget` (`Pentest Network Widget`).
 - El widget muestra con iconos Nerd Font:
   - LAN (IP local de salida)
   - Docker (`docker0`)
@@ -106,6 +108,13 @@ chmod +x install.sh
 2. Configura el comando como: `/home/TU_USUARIO/.local/bin/plasma-panel-netinfo.sh`
 3. Intervalo recomendado: `5` segundos.
 4. (Opcional) Ajusta ancho del widget para mostrar LAN/DOCKER/TARGET/VPN completos.
+
+#### Plasma (Plasmoid nativo)
+
+1. El script crea el plasmoid en `~/.local/share/plasma/plasmoids/pentest.ipwidget`.
+2. Si existe `kpackagetool6` o `kpackagetool5`, lo instala automáticamente.
+3. En Plasma: `Editar panel -> Añadir widgets` y busca `Pentest Network Widget`.
+4. El widget lee `TARGET` desde `~/.config/target` y refresca cada 5 segundos.
 
 ### Solución rápida de problemas
 
