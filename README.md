@@ -115,7 +115,7 @@ chmod +x install.sh
 2. Genera el paquete `~/.local/share/kali-parrot-setup/plasmoid-build/pentest-dashboard.plasmoid`.
 3. Si existe `kpackagetool6` o `kpackagetool5`, lo instala automáticamente (con plantilla compatible con la versión de Plasma detectada).
 4. En Plasma: `Editar panel -> Añadir widgets` y busca `Pentest Dashboard Mini`.
-5. El widget lee `TARGET` desde `~/.config/target` (o variable de entorno `TARGET`) y refresca cada 4 segundos.
+5. El widget muestra `LAN`, `VPN`, `DOCKER` y `TARGET`, y refresca cada 4 segundos.
 
 ### Solución rápida de problemas
 
