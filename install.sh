@@ -468,7 +468,13 @@ configure_kitty_katana() {
   local kitty_dir="${HOME}/.config/kitty"
   local kitty_conf="${kitty_dir}/kitty.conf"
   local katana_theme="${kitty_dir}/katana-dark.conf"
-  local include_line="include katana-dark.conf"
+  local start="# >>> kali-parrot-kitty >>>"
+  local end="# <<< kali-parrot-kitty <<<"
+  local tmp
+  local zsh_bin
+
+  zsh_bin="$(command -v zsh || true)"
+  [[ -n "${zsh_bin}" ]] || zsh_bin="/bin/zsh"
 
   mkdir -p "${kitty_dir}"
   backup_file "${kitty_conf}"
@@ -509,10 +515,75 @@ color15 #e5e9f0
 KITTY_THEME
 
   if [[ ! -f "${kitty_conf}" ]]; then
-    printf "%s\n" "${include_line}" > "${kitty_conf}"
-  elif ! grep -qxF "${include_line}" "${kitty_conf}"; then
-    printf "\n%s\n" "${include_line}" >> "${kitty_conf}"
+    : > "${kitty_conf}"
   fi
+
+  tmp="$(mktemp)"
+  awk -v start="${start}" -v end="${end}" '
+    $0 == start { in_block=1; next }
+    $0 == end { in_block=0; next }
+    !in_block { print }
+  ' "${kitty_conf}" > "${tmp}"
+  mv "${tmp}" "${kitty_conf}"
+
+  cat >> "${kitty_conf}" <<KITTY_MANAGED
+
+# >>> kali-parrot-kitty >>>
+enable_audio_bell no
+
+include color.ini
+
+font_family      HackNerdFont
+font_size 10
+
+disable_ligatures never
+
+url_color #61afef
+url_style curly
+
+map alt+left neighboring_window left
+map alt+right neighboring_window right
+map alt+up neighboring_window up
+map alt+down neighboring_window down
+
+map f1 copy_to_buffer a
+map f2 paste_from_buffer a
+map f3 copy_to_buffer b
+map f4 paste_from_buffer b
+
+cursor_shape beam
+cursor_beam_thickness 6
+
+mouse_hide_wait 3.0
+
+repaint_delay 10
+input_delay 3
+sync_to_monitor yes
+
+map ctrl+shift+z toggle_layout stack
+tab_bar_style powerline
+
+inactive_tab_background #e06c75
+active_tab_background #98c379
+inactive_tab_foreground #000000
+tab_bar_margin_color black
+
+map ctrl+shift+enter new_window_with_cwd
+map ctrl+shift+t new_tab_with_cwd
+
+map ctrl+shift+alt+left resize_window wider
+map ctrl+shift+alt+right resize_window narrower
+map ctrl+shift+alt+up resize_window taller
+map ctrl+shift+alt+down resize_window shorter
+map ctrl+shift+alt+space resize_window reset
+
+background_opacity 0.95
+
+shell ${zsh_bin}
+
+include katana-dark.conf
+# <<< kali-parrot-kitty <<<
+KITTY_MANAGED
 }
 
 apply_dark_katana_theme() {
