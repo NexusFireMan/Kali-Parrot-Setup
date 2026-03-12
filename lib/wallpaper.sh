@@ -13,6 +13,7 @@ set_wallpaper() {
   local xfce_props=()
   local xfce_image_path_props=()
   local xfce_roots=()
+  local forced_paths=()
 
   if [[ ! -f "${wallpaper}" ]]; then
     log "No se encontró fondo en ${wallpaper}; se omite configuración de wallpaper."
@@ -35,6 +36,22 @@ set_wallpaper() {
         "/backdrop/screen0/monitorVirtual-1"
       )
     fi
+
+    # Canonical + common XFCE monitor paths on Kali/Parrot.
+    forced_paths=(
+      "/backdrop/screen0/monitor0/workspace0/last-image"
+      "/backdrop/screen0/monitor0/last-image"
+      "/backdrop/screen0/monitor0/image-path"
+      "/backdrop/screen0/monitorVirtual-1/workspace0/last-image"
+      "/backdrop/screen0/monitorVirtual-1/last-image"
+      "/backdrop/screen0/monitorVirtual-1/image-path"
+      "/backdrop/screen0/monitorHDMI-0/workspace0/last-image"
+      "/backdrop/screen0/monitorHDMI-0/last-image"
+      "/backdrop/screen0/monitorHDMI-0/image-path"
+      "/backdrop/screen1/monitor0/workspace0/last-image"
+      "/backdrop/screen1/monitor0/last-image"
+      "/backdrop/screen1/monitor0/image-path"
+    )
 
     xfconf-query -c xfce4-desktop -p "/backdrop/single-workspace-mode" --create -t bool -s true >/dev/null 2>&1 || true
     xfconf-query -c xfce4-desktop -p "/backdrop/single-workspace-number" --create -t int -s 0 >/dev/null 2>&1 || true
@@ -66,6 +83,16 @@ set_wallpaper() {
       xfconf-query -c xfce4-desktop -p "${root}/image-style" --create -t int -s 5 >/dev/null 2>&1 || true
     done
 
+    # Force known paths even if they weren't listed.
+    local forced
+    for forced in "${forced_paths[@]}"; do
+      if [[ "${forced}" == */image-path ]]; then
+        xfconf-query -c xfce4-desktop -p "${forced}" --create -t string -s "${wallpaper}" >/dev/null 2>&1 && xfce_applied=1 || true
+      else
+        xfconf-query -c xfce4-desktop -p "${forced}" --create -t string -s "${wallpaper}" >/dev/null 2>&1 && xfce_applied=1 || true
+      fi
+    done
+
     if [[ "${xfce_applied}" -eq 1 ]]; then
       xfdesktop --reload >/dev/null 2>&1 || {
         xfdesktop --quit >/dev/null 2>&1 || true
@@ -75,6 +102,11 @@ set_wallpaper() {
       pkill -USR1 xfdesktop >/dev/null 2>&1 || true
       applied=1
     fi
+  fi
+
+  # Generic X11 fallback if desktop-specific APIs didn't apply it.
+  if [[ "${applied}" -eq 0 ]] && command -v feh >/dev/null 2>&1; then
+    feh --bg-scale "${wallpaper}" >/dev/null 2>&1 && applied=1 || true
   fi
 
   if command -v gsettings >/dev/null 2>&1 && [[ "${desktop_env}" == *"GNOME"* ]]; then

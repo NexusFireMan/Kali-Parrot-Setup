@@ -55,6 +55,7 @@ APT_PACKAGES=(
   lsd
   flameshot
   xclip
+  feh
   golang-go
   git
   curl
