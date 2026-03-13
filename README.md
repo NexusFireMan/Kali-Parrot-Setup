@@ -1,138 +1,332 @@
-# Kali-Parrot Setup
 
-Scripts para personalizar entornos **Kali Linux** o **Parrot OS**.
+<p align="center">
 
-## Estado
+<svg width="180" height="180" viewBox="0 0 200 200">
+<rect width="200" height="200" rx="25" fill="#0b0e14"/>
+<text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle"
+font-family="monospace" font-size="70" fill="#7aa2f7">
+KPS
+</text>
+</svg>
 
-- Versión actual orientada a uso diario en laboratorios CTF/pentesting.
-- Flujo estabilizado para escritorios `XFCE`, `MATE` y `Plasma` (incluyendo Plasma 6).
+</p>
 
-## Incluye
+<h1 align="center">
+Kali-Parrot Setup
+</h1>
 
-- zsh
-- kitty
-- bat desde release oficial de `sharkdp/bat` (con fallback a `batcat` en Debian/Kali)
-- lsd
-- flameshot
-- Atajo `PrtSc` configurado para abrir `flameshot gui` con detección de escritorio (XFCE/GNOME/MATE/Plasma, best-effort)
+<p align="center">
+Bootstrap profesional para entornos de <b>Pentesting, CTF y Bug Bounty</b> en Kali Linux y Parrot Security OS.
+</p>
+
+---
+
+<p align="center">
+
+![Kali Linux](https://img.shields.io/badge/Kali-Linux-557C94?style=for-the-badge&logo=kalilinux)
+![Parrot OS](https://img.shields.io/badge/Parrot-OS-00A3E0?style=for-the-badge&logo=linux)
+![Shell](https://img.shields.io/badge/Shell-Bash-4EAA25?style=for-the-badge&logo=gnu-bash)
+![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
+![Maintained](https://img.shields.io/badge/maintained-yes-success?style=for-the-badge)
+
+</p>
+
+<p align="center">
+
+![Stars](https://img.shields.io/github/stars/NexusFireMan/Kali-Parrot-Setup?style=social)
+![Forks](https://img.shields.io/github/forks/NexusFireMan/Kali-Parrot-Setup?style=social)
+![Issues](https://img.shields.io/github/issues/NexusFireMan/Kali-Parrot-Setup)
+
+</p>
+
+---
+
+# 🧠 ¿Qué es Kali-Parrot Setup?
+
+**Kali-Parrot Setup** es un bootstrap automatizado para crear un entorno profesional de pentesting en:
+
+- Kali Linux
+- Parrot Security OS
+
+Configura automáticamente:
+
+- terminal
+- herramientas
+- workflow
+- widgets
+- entorno visual
+
+El objetivo es disponer de un **entorno reproducible y optimizado para hacking ético** en cuestión de minutos.
+
+---
+
+# ⚡ Características principales
+
+### 🖥 Terminal profesional
+
+- ZSH
 - Oh My Zsh
 - Powerlevel10k
 - zsh-autosuggestions
 - zsh-syntax-highlighting
-- zsh-sudo (plugin `sudo` de Oh My Zsh)
-- Fuente `Hack Nerd Font`
+- plugin sudo
+
+---
+
+### 🧰 Herramientas útiles
+
+Incluye:
+
+- bat
+- lsd
+- flameshot
+- kitty
 - gomap
-- Fondo por defecto empaquetado en `assets/` (`Walpaper.jpg` o `Wallpaper.jpg`) y copiado a `~/Pictures/`
-- Modo visual opcional `--dark-katana` (Kali-Dark + Flat-Remix-Blue-Dark + Kitty en paleta katana)
-- Widget en barra superior de XFCE con iconos de color para LAN/DOCKER/TARGET/VPN (usa ruta absoluta al script)
-- En `--dark-katana`, Kitty queda con bloque gestionado (fuente, opacidad, tabs, mappings y paleta katana).
+- xclip
+- feh
 
-## Uso
+---
 
-```bash
-chmod +x install.sh
-./install.sh
+### 🎯 Workflow de pentesting
 
-# Estilo oscuro tipo katana (opcional)
-./install.sh --dark-katana
+Funciones incluidas:
+
+```
+settarget <IP>
+showtarget
+cleartarget
 ```
 
-## Estructura
+Esto permite trabajar con un objetivo activo.
 
-- `install.sh`: orquestador principal (instalación y flujo).
-- `templates/`: bloques reutilizables para mantener el script legible:
-  - `p10k-user.zsh`, `p10k-root.zsh`
-  - `zsh-managed-block.zsh`
-  - `kitty-katana-dark.conf`, `kitty-managed.conf.tmpl`
-  - `xfce-panel-netinfo.sh.tmpl`, `plasma-panel-netinfo.sh.tmpl`
-  - `plasma-pentest-metadata.json.tmpl`, `plasma-pentest-metadata6.json.tmpl`, `plasma-pentest-main.qml.tmpl`, `plasma-pentest-main5.qml.tmpl`, `plasma-pentest-ipinfo.sh.tmpl`
+Ejemplo:
 
-## Alias y funciones añadidas
+```
+settarget 10.10.10.55
+```
 
-### Alias
+---
 
-- `cat`: usa `bat`.
-- `catn`: `bat --style=plain`.
-- `catnp`: `bat --style=plain --paging=never`.
-- `ls`: usa `lsd --group-dirs=first`.
-- `l`: `lsd --group-dirs=first`.
-- `la`: `lsd -a --group-dirs=first`.
-- `ll`: `lsd -lh --group-dirs=first`.
-- `lla`: `lsd -lha --group-dirs=first`.
-- `pyserver`: levanta servidor HTTP rápido en puerto 80 (`python3 -m http.server 80`).
-- `tshow`: alias de `showtarget`.
+### 🗂 Creación automática de estructura de laboratorio
 
-### Funciones
+```
+testGo <machine>
+```
 
-- `settarget <valor>`: guarda el TARGET persistente en `~/.config/target` y exporta la variable `TARGET`.
-- `showtarget`: muestra el valor actual de `TARGET`.
-- `cleartarget`: limpia el TARGET guardado y desexporta `TARGET`.
-- `testGo <nombre_maquina>`: crea estructura de directorios de trabajo (`enum/nmap`, `enum/web`, `burst`, `tmp`, `post`) y entra en `enum/nmap`.
-- `extractPorts <archivo_nmap>`: extrae IP/puertos abiertos de salida de Nmap y copia los puertos al portapapeles si `xclip` está disponible.
+Genera:
 
-## Notas
+```
+enum/
+   nmap/
+   web/
 
-- El script está pensado para ejecutarse como usuario normal con permisos `sudo`.
-- Si no tienes `sudo`, ejecútalo como root ajustando el entorno manualmente.
-- Si quieres usar `zsh` como shell por defecto, el script intentará configurarlo automáticamente.
-- Antes de modificar `~/.zshrc` y `~/.p10k.zsh`, el script crea backups en `~/.config/kali-parrot-setup/backups/<timestamp>/`.
-- También respalda configuración de XFCE antes de tocar panel/atajos/fondo (`xfce4-panel.xml`, `xfce4-keyboard-shortcuts.xml`, `xfce4-desktop.xml`) en esa misma ruta.
-- Configura también el entorno de `root` (Oh My Zsh + plugins + `.zshrc` + `.p10k.zsh`) con prompt rojo y calavera para `os_icon`, guardando backups de `/root/.zshrc` y `/root/.p10k.zsh` en la misma carpeta de backups.
+burst/
+post/
+tmp/
+```
 
-## Compatibilidad de escritorio
+---
 
-- `XFCE`: atajo `PrtSc`, widget `Generic Monitor`, wallpaper y ajustes de tema soportados.
-- `MATE`: atajo `PrtSc` (ruta `Marco`) soportado; panel/widget se mantiene manual.
-- `Plasma 5/6`: atajo `PrtSc` (desactiva Spectacle + asigna Flameshot), `Command Output` y plasmoid `Pentest Dashboard Mini`.
-- `GNOME`: atajo `PrtSc` por custom keybinding soportado en modo best-effort.
+### 🔎 ExtractPorts
 
-## Widget (barra superior XFCE y Plasma)
+Extrae puertos desde un resultado de Nmap.
+
+```
+extractPorts scan.txt
+```
+
+También copia los puertos al portapapeles si está instalado `xclip`.
+
+---
+
+# 📊 Widget de red para panel
+
+El proyecto incluye un widget que muestra información clave durante el pentesting.
+
+```
+🌐 LAN
+🐳 Docker
+🎯 TARGET
+🔒 VPN
+```
+
+Ejemplo:
+
+```
+🌐 192.168.1.25   🐳 172.17.0.1   🎯 10.10.10.55   🔒 10.10.14.3
+```
+
+---
+
+### XFCE
+
+Usa plugin **Generic Monitor**
 
 ![Widget XFCE](pics/image.png)
 
-- El script crea el archivo del widget en `~/.local/bin/xfce-panel-netinfo.sh`.
-- En Plasma crea también `~/.local/bin/plasma-panel-netinfo.sh` (para usar con widget `Command Output`).
-- En Plasma también crea e instala (si hay `kpackagetool5/6`) el plasmoid `pentest.dashboard` (`Pentest Dashboard Mini`).
-- El widget muestra con iconos Nerd Font:
-  - LAN (IP local de salida)
-  - Docker (`docker0`)
-  - TARGET (desde `~/.config/target`, configurable con `settarget`)
-  - VPN (`tun0` / `turn0` / `wg0`)
-- El comando del plugin se guarda con **ruta absoluta** para evitar errores de "fichero no encontrado".
-- El script no reordena ni reconstruye el panel automáticamente (para evitar desconfigurarlo), tanto en XFCE como en Plasma.
+---
 
-### Activación manual recomendada
+### Plasma
 
-#### XFCE (Generic Monitor)
+Soporta:
 
-1. En el panel XFCE: clic derecho `Panel > Add New Items...`
-2. Añade `Generic Monitor`
-3. Configura el comando como: `/home/TU_USUARIO/.local/bin/xfce-panel-netinfo.sh`
-4. Intervalo recomendado: `5` segundos
-5. Activa `Use markup` para colores/iconos
-6. Quitar check de `Etiqueta`
+- widget Command Output
+- Plasmoid nativo
 
-![Propiedades Generic Monitor](pics/image1.png)
+Nota: si reinstalas el plasmoid, normalmente tendrás que quitarlo y volverlo a añadir al panel para que Plasma recargue la versión nueva.
 
-#### Plasma (Command Output)
+---
 
-1. Edita panel y añade el widget `Command Output`.
-2. Configura el comando como: `/home/TU_USUARIO/.local/bin/plasma-panel-netinfo.sh`
-3. Intervalo recomendado: `5` segundos.
-4. (Opcional) Ajusta ancho del widget para mostrar LAN/DOCKER/TARGET/VPN completos.
+# 🎨 Tema visual Dark Katana
 
-#### Plasma (Plasmoid nativo)
+Modo opcional con estilo oscuro.
 
-1. El script crea el plasmoid en `~/.local/share/plasma/plasmoids/pentest.dashboard`.
-2. Genera el paquete `~/.local/share/kali-parrot-setup/plasmoid-build/pentest-dashboard.plasmoid`.
-3. Si existe `kpackagetool6` o `kpackagetool5`, lo instala automáticamente (con plantilla compatible con la versión de Plasma detectada).
-4. En Plasma: `Editar panel -> Añadir widgets` y busca `Pentest Dashboard Mini`.
-5. El widget muestra `LAN`, `VPN`, `DOCKER` y `TARGET`, y refresca cada 4 segundos.
+Incluye:
 
-### Solución rápida de problemas
+- tema Kali-Dark
+- iconos Flat-Remix-Blue-Dark
+- paleta terminal estilo Katana
+- configuración optimizada de Kitty
 
-- Si no aparece: reinicia panel con `xfce4-panel -r`
-- Si no carga iconos: confirma fuente Nerd Font activa en el sistema
-- Si `TARGET` sale vacío: usa `settarget <IP_o_host>` y luego `tshow`
-- Si el plasmoid de Plasma no refresca: revisa `~/.cache/kali-parrot-setup/plasmoid-network.log`
-- Si cambias plantillas de plasmoid, reinstala con `./install.sh` y vuelve a añadir el widget al panel.
+Activación:
+
+```
+./install.sh --dark-katana
+```
+
+---
+
+# 🚀 Instalación
+
+Clonar repositorio
+
+```
+git clone https://github.com/NexusFireMan/Kali-Parrot-Setup
+cd Kali-Parrot-Setup
+```
+
+Dar permisos
+
+```
+chmod +x install.sh
+```
+
+Ejecutar
+
+```
+./install.sh
+```
+
+Modo visual:
+
+```
+./install.sh --dark-katana
+```
+
+---
+
+# 🧩 Arquitectura del proyecto
+
+```
+Kali-Parrot-Setup
+│
+├── install.sh
+│
+├── lib
+│   ├── common.sh
+│   ├── bat.sh
+│   ├── desktop.sh
+│   ├── wallpaper.sh
+│   ├── kitty.sh
+│   └── zsh.sh
+│
+├── templates
+│   ├── kitty configs
+│   ├── zsh configs
+│   ├── plasmoid templates
+│   └── panel scripts
+│
+├── assets
+│   └── wallpaper
+│
+└── pics
+    └── screenshots
+```
+
+---
+
+# 💾 Backups automáticos
+
+Antes de modificar el sistema se crean backups en:
+
+```
+~/.config/kali-parrot-setup/backups/
+```
+
+Incluye:
+
+- .zshrc
+- .p10k.zsh
+- configuraciones de XFCE
+- configuraciones de root
+- backups de panel, atajos y fondo cuando aplica
+
+---
+
+# 🖥 Compatibilidad
+
+| Escritorio | Soporte |
+|-------------|--------|
+| XFCE | completo |
+| Plasma 5 | completo |
+| Plasma 6 | completo |
+| MATE | parcial |
+| GNOME | básico |
+
+Notas:
+
+- `XFCE`: soporta wallpaper, atajo `PrtSc` y widget `Generic Monitor`.
+- `Plasma 5/6`: soporta `Command Output`, plasmoid nativo y reasignación de `PrtSc` desde Spectacle a Flameshot.
+- `MATE`: soporta el atajo `PrtSc`, pero el widget del panel queda manual.
+- `GNOME`: el atajo `PrtSc` se configura en modo best-effort y no se añade widget equivalente.
+
+---
+
+# 🎯 Objetivo del proyecto
+
+Este proyecto busca proporcionar un **entorno reproducible para pentesting**, evitando tener que configurar manualmente cada instalación de Kali o Parrot.
+
+Pensado para:
+
+- CTF
+- HackTheBox
+- TryHackMe
+- Bug Bounty
+- auditorías de seguridad
+
+---
+
+# 🤝 Contribuciones
+
+Las contribuciones son bienvenidas.
+
+Puedes abrir:
+
+- Issues
+- Pull Requests
+- sugerencias de herramientas
+
+---
+
+# 📜 Licencia
+
+MIT License
+
+---
+
+<p align="center">
+
+Made with ☕ and Bash by  
+<b>NexusFireMan</b>
+
+</p>
