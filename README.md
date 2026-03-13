@@ -36,6 +36,7 @@ Bootstrap profesional para entornos de <b>Pentesting, CTF y Bug Bounty</b> en Ka
 ![Stars](https://img.shields.io/github/stars/NexusFireMan/Kali-Parrot-Setup?style=social)
 ![Forks](https://img.shields.io/github/forks/NexusFireMan/Kali-Parrot-Setup?style=social)
 ![Issues](https://img.shields.io/github/issues/NexusFireMan/Kali-Parrot-Setup)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white)](https://ko-fi.com/C0C61UHTB1)
 
 </p>
 
@@ -163,6 +164,7 @@ Ejemplo:
 Usa plugin **Generic Monitor**
 
 ![Widget XFCE](pics/image.png)
+![Configuración Generic Monitor](pics/image1.png)
 
 ---
 
