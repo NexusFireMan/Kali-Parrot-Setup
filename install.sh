@@ -8,7 +8,7 @@ TEMPLATE_DIR="${SCRIPT_DIR}/templates"
 RUN_TS="$(date +%Y%m%d-%H%M%S)"
 BACKUP_DIR="${HOME}/.config/kali-parrot-setup/backups/${RUN_TS}"
 
-DARK_KATANA=0
+THEME_MODE="default"
 TOTAL_STEPS=5
 CURRENT_STEP=0
 
@@ -35,12 +35,16 @@ fi
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dark-katana)
-      DARK_KATANA=1
+      THEME_MODE="katana"
+      shift
+      ;;
+    --dark-samurai)
+      THEME_MODE="samurai"
       shift
       ;;
     *)
       err "Opción no reconocida: $1"
-      err "Uso: ./${SCRIPT_NAME} [--dark-katana]"
+      err "Uso: ./${SCRIPT_NAME} [--dark-katana|--dark-samurai]"
       exit 1
       ;;
   esac
@@ -73,6 +77,7 @@ ZSH_MANAGED_TEMPLATE="${TEMPLATE_DIR}/zsh-managed-block.zsh"
 FONT_DIR="${HOME}/.local/share/fonts/HackNerdFont"
 WALLPAPER_FILE="${HOME}/Pictures/Walpaper.jpg"
 WALLPAPER_FILE_ALT="${HOME}/Pictures/Wallpaper.jpg"
+SAMURAI_WALLPAPER_FILE="${HOME}/Pictures/fondo.jpg"
 
 install_base_packages() {
   log "Actualizando índices de paquetes..."
@@ -125,31 +130,48 @@ configure_user_zsh
 install_gomap
 configure_root_zsh
 log "Configurando Kitty..."
-configure_kitty_katana
+case "${THEME_MODE}" in
+  samurai)
+    configure_kitty_samurai
+    ;;
+  *)
+    configure_kitty_katana
+    ;;
+esac
 
 section "Fuentes y wallpaper"
 install_hack_nerd_font
 
 log "Copiando wallpaper desde el repositorio..."
-if REPO_WALLPAPER_FILE="$(resolve_repo_wallpaper)"; then
+if [[ "${THEME_MODE}" == "samurai" && -f "${SCRIPT_DIR}/assets/fondo.jpg" ]]; then
+  ensure_repo_wallpaper "${SCRIPT_DIR}/assets/fondo.jpg" "${SAMURAI_WALLPAPER_FILE}"
+elif REPO_WALLPAPER_FILE="$(resolve_repo_wallpaper)"; then
   ensure_repo_wallpaper "${REPO_WALLPAPER_FILE}" "${WALLPAPER_FILE}"
   ensure_repo_wallpaper "${REPO_WALLPAPER_FILE}" "${WALLPAPER_FILE_ALT}"
 else
-  warn "No se encontró wallpaper en assets/ (Walpaper.jpg/Wallpaper.jpg)."
+  warn "No se encontró wallpaper en assets/ (Walpaper.jpg/Wallpaper.jpg/fondo.jpg)."
 fi
 
 log "Configurando fondo de pantalla por defecto..."
-if [[ -f "${WALLPAPER_FILE}" ]]; then
+if [[ "${THEME_MODE}" == "samurai" && -f "${SAMURAI_WALLPAPER_FILE}" ]]; then
+  set_wallpaper "${SAMURAI_WALLPAPER_FILE}"
+elif [[ -f "${WALLPAPER_FILE}" ]]; then
   set_wallpaper "${WALLPAPER_FILE}"
 elif [[ -f "${WALLPAPER_FILE_ALT}" ]]; then
   set_wallpaper "${WALLPAPER_FILE_ALT}"
 fi
 
-if [[ "${DARK_KATANA}" -eq 1 ]]; then
-  apply_dark_katana_theme
-else
-  log "Modo dark-katana desactivado (usa --dark-katana para habilitarlo)."
-fi
+case "${THEME_MODE}" in
+  katana)
+    apply_dark_katana_theme
+    ;;
+  samurai)
+    apply_dark_samurai_theme
+    ;;
+  *)
+    log "Modos visuales desactivados (usa --dark-katana o --dark-samurai para habilitarlos)."
+    ;;
+esac
 
 ensure_default_shell_zsh
 

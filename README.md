@@ -198,6 +198,37 @@ Activación:
 
 ---
 
+# ⚔️ Tema visual Dark Samurai
+
+Modo opcional con una estética más sobria y gris.
+
+Incluye:
+
+- fondo `assets/fondo.jpg`
+- tema Kali-Dark
+- iconos Adwaita
+- paleta de Kitty en grises
+- opacidad y tabs ajustados a un look más silencioso
+
+Activación:
+
+```
+./install.sh --dark-samurai
+```
+
+---
+
+# 🆚 Comparativa de estilos
+
+| Modo | Fondo | Iconos | Kitty | Sensación visual |
+|------|-------|--------|-------|------------------|
+| `--dark-katana` | `Walpaper.jpg` / `Wallpaper.jpg` | `Flat-Remix-Blue-Dark` | paleta azul/verde con acentos vivos | más técnico, contrastado y agresivo |
+| `--dark-samurai` | `fondo.jpg` | `Adwaita` | paleta gris y más sobria | más silencioso, gris y atmosférico |
+
+Ambos modos mantienen la misma base funcional: Zsh, Powerlevel10k, alias, widget, Flameshot, Kitty y resto del workflow.
+
+---
+
 # 🚀 Instalación
 
 Clonar repositorio
@@ -223,6 +254,12 @@ Modo visual:
 
 ```
 ./install.sh --dark-katana
+```
+
+Modo samurai:
+
+```
+./install.sh --dark-samurai
 ```
 
 ---

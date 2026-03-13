@@ -6,7 +6,7 @@ font_size 10
 
 disable_ligatures never
 
-url_color #61afef
+url_color __URL_COLOR__
 url_style curly
 
 map alt+left neighboring_window left
@@ -31,10 +31,10 @@ sync_to_monitor yes
 map ctrl+shift+z toggle_layout stack
 tab_bar_style powerline
 
-inactive_tab_background #e06c75
-active_tab_background #98c379
-inactive_tab_foreground #000000
-tab_bar_margin_color black
+inactive_tab_background __INACTIVE_TAB_BG__
+active_tab_background __ACTIVE_TAB_BG__
+inactive_tab_foreground __INACTIVE_TAB_FG__
+tab_bar_margin_color __TAB_BAR_MARGIN__
 
 map ctrl+shift+enter new_window_with_cwd
 map ctrl+shift+t new_tab_with_cwd
@@ -45,9 +45,9 @@ map ctrl+shift+alt+up resize_window taller
 map ctrl+shift+alt+down resize_window shorter
 map ctrl+shift+alt+space resize_window reset
 
-background_opacity 0.95
+background_opacity __BACKGROUND_OPACITY__
 
 shell __ZSH_BIN__
 
-include katana-dark.conf
+include __KITTY_THEME_FILE__
 # <<< kali-parrot-kitty <<<
